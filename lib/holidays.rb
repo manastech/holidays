@@ -148,4 +148,4 @@ module Holidays
   end
 end
 
-Holidays::LoadAllDefinitions.call
+# Holidays::LoadAllDefinitions.call
