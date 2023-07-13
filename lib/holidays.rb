@@ -14,8 +14,8 @@ module Holidays
   MONTH_LENGTHS = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
   DAY_SYMBOLS = Date::DAYNAMES.collect { |n| n.downcase.intern }
 
-  DEFINITIONS_PATH = 'generated_definitions'
-  FULL_DEFINITIONS_PATH = File.expand_path(File.dirname(__FILE__) + "/#{DEFINITIONS_PATH}")
+  # DEFINITIONS_PATH = 'generated_definitions'
+  # FULL_DEFINITIONS_PATH = File.expand_path(File.dirname(__FILE__) + "/#{DEFINITIONS_PATH}")
 
   class << self
     def any_holidays_during_work_week?(date, *options)
