@@ -14,10 +14,30 @@ module Holidays
   MONTH_LENGTHS = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
   DAY_SYMBOLS = Date::DAYNAMES.collect { |n| n.downcase.intern }
 
+  class Configuration
+    attr_accessor definitions_path
+
+    def initialize
+      @definitions_path = "generated_definitions"
+    end
+
+    def full_definitions_path
+      @full_definitions_path || @definitions_path
+    end
+
+    def full_definitions_path=(path)
+      @full_definitions_path = path
+    end
+  end
   # DEFINITIONS_PATH = 'generated_definitions'
   # FULL_DEFINITIONS_PATH = File.expand_path(File.dirname(__FILE__) + "/#{DEFINITIONS_PATH}")
 
   class << self
+
+    def configuration
+      @configuration ||= Configuration.new
+    end
+
     def any_holidays_during_work_week?(date, *options)
       monday = date - (date.wday - 1)
       friday = date + (5 - date.wday)
@@ -103,7 +123,8 @@ module Holidays
     end
 
     def load_all
-      path = FULL_DEFINITIONS_PATH + "/"
+      # path = FULL_DEFINITIONS_PATH + "/"
+      path = Holidays.configuration.full_definitions_path + "/"
 
       Dir.foreach(path) do |item|
         next if item == '.' or item == '..'

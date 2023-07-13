@@ -66,7 +66,7 @@ namespace :generate do
       regions, rules_by_month, custom_methods, tests = Holidays::Factory::Definition.file_parser.parse_definition_files(files)
       module_src, test_src = Holidays::Factory::Definition.source_generator.generate_definition_source(region, files, regions, rules_by_month, custom_methods, tests)
 
-      File.open("lib/#{Holidays::DEFINITIONS_PATH}/#{region.downcase.to_s}.rb","w") do |file|
+      File.open("lib/#{Holidays.configuration.definitions_path}/#{region.downcase.to_s}.rb","w") do |file|
         file.puts module_src
       end
       unless test_src.empty?
@@ -82,7 +82,7 @@ namespace :generate do
 
     puts "Building regions master file for later validation:"
 
-    File.open("lib/#{Holidays::DEFINITIONS_PATH}/REGIONS.rb","w") do |file|
+    File.open("lib/#{Holidays.configuration.definitions_path}/REGIONS.rb","w") do |file|
       file.puts Holidays::Factory::Definition.regions_generator.call(all_regions)
     end
 
@@ -91,14 +91,14 @@ namespace :generate do
 
   desc 'Build the definition manifest'
   task :manifest do
-    File.open("lib/#{Holidays::DEFINITIONS_PATH}/MANIFEST","w") do |file|
+    File.open("lib/#{Holidays.configuration.definitions_path}/MANIFEST","w") do |file|
       #TODO Generating the file source should be done interally, in the /lib dir, not in the Rakefile
       file.puts <<-EOH
 ==== Regional definitions
 The following definition files are included in this installation:
 
   EOH
-      FileList.new("lib/#{Holidays::DEFINITIONS_PATH}/*.rb").exclude(/version/).each do |str|
+      FileList.new("lib/#{Holidays.configuration.definitions_path}/*.rb").exclude(/version/).each do |str|
         file.puts('* ' + str.gsub(/^lib\/|\.rb$/, ''))
       end
     end

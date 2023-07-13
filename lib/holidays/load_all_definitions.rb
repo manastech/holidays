@@ -26,7 +26,7 @@ module Holidays
 
         Factory::Definition.custom_methods_repository.add(global_methods)
 
-        static_regions_definition = "#{Holidays::DEFINITIONS_PATH}/REGIONS.rb"
+        static_regions_definition = "#{Holidays::configuration.definitions_path}/REGIONS.rb"
         require static_regions_definition
       end
 

@@ -1,6 +1,6 @@
 require File.expand_path(File.dirname(__FILE__)) + '/../test_helper'
-require "#{Holidays::DEFINITIONS_PATH}/gb"
-require "#{Holidays::DEFINITIONS_PATH}/ie"
+require "#{Holidays.confugration.definitions_path}/gb"
+require "#{Holidays.confugration.definitions_path}/ie"
 
 class MultipleRegionsTests < Test::Unit::TestCase
   # Simulate load of new environment where the repositories begin empty
