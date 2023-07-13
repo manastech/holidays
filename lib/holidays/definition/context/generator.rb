@@ -197,10 +197,14 @@ module Holidays
         # What we should do is ensure that all custom methods are loaded into the repo as soon as they are parsed
         # so we only have one place to look.
         def get_function_arguments(function_id, parsed_custom_methods)
+          puts "Searching for function arguments for function #{function_id}"
           if method = @custom_methods_repository.find(function_id)
+            puts "found args: #{method.parameters}"
             method.parameters.collect { |arg| arg[1] }
           elsif method = parsed_custom_methods[function_id]
             method.arguments.collect { |arg| arg.to_sym }
+          else
+            puts "did not find arguments"
           end
         end
       end
