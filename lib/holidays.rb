@@ -15,7 +15,7 @@ module Holidays
   DAY_SYMBOLS = Date::DAYNAMES.collect { |n| n.downcase.intern }
 
   class Configuration
-    attr_accessor definitions_path
+    attr_accessor :definitions_path
 
     def initialize
       @definitions_path = "generated_definitions"
