@@ -26,6 +26,7 @@ module Holidays
           all_regions = []
           all_rules_by_month = {}
           all_custom_methods = {}
+          all_metadata_by_region = {}
           all_tests = []
 
           files.flatten!
@@ -35,9 +36,16 @@ module Holidays
 
             custom_methods = @custom_method_parser.call(definition_file['methods'])
 
+            metadata_region, metadata = parse_metadata_definitions(definition_file['metadata'])
             regions, rules_by_month = parse_month_definitions(definition_file['months'], custom_methods)
 
+            metadata_region_sym = metadata[:region].to_sym if metadata[:region]
+            if metadata_region_sym and !all_metadata_by_region.key?(metadata_region_sym)
+              all_metadata_by_region[metadata_region_sym] = metadata
+            end
+
             all_regions << regions.flatten
+            all_regions << metadata[:region].map(&:to_sym) 
 
             all_rules_by_month.merge!(rules_by_month) { |month, existing, new|
               existing << new
@@ -55,7 +63,7 @@ module Holidays
 
           all_regions.flatten!.uniq!
 
-          [all_regions, all_rules_by_month, all_custom_methods, all_tests]
+          [all_regions, all_rules_by_month, all_metadata_by_region, all_custom_methods, all_tests]
         end
 
         def generate_definition_source(module_name, files, regions, rules_by_month, custom_methods, tests)
@@ -74,6 +82,17 @@ module Holidays
         end
 
         private
+
+        def parse_metadata(metadata_definitions)
+          metadata_definitions.transform_keys!(&:to_sym) if metadata_definitions.is_a?(Hash)
+
+          if metadata[:region]
+            metadata_region = metadata_definitions[:region].to_sym if metadata[:region]
+            metadata_definitions.delete(:region)
+          end
+          
+          [metadata_region, metadata_definitions]
+        end
 
         #FIXME This should be a 'month_definitions_parser' like the above parser
         def parse_month_definitions(month_definitions, parsed_custom_methods)
@@ -105,8 +124,8 @@ module Holidays
                   rule[:year_ranges][:between] = Range.new(start_year, end_year)
                 end
 
-                rule[:regions] = rule[:regions].collect { |r| r.to_sym }
-                regions << rule[:regions]
+                rule[:regions] = rule[:regions].collect { |r| r.to_sym } if rule[:regions]
+                regions << rule[:regions] || []
 
                 exists = false
                 rules_by_month[month].each do |ex|
