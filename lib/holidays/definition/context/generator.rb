@@ -36,16 +36,18 @@ module Holidays
 
             custom_methods = @custom_method_parser.call(definition_file['methods'])
 
-            metadata_region, metadata = parse_metadata_definitions(definition_file['metadata'])
             regions, rules_by_month = parse_month_definitions(definition_file['months'], custom_methods)
-
-            metadata_region_sym = metadata[:region].to_sym if metadata[:region]
-            if metadata_region_sym and !all_metadata_by_region.key?(metadata_region_sym)
-              all_metadata_by_region[metadata_region_sym] = metadata
-            end
-
             all_regions << regions.flatten
-            all_regions << metadata[:region].map(&:to_sym) 
+
+            if definition_file['metadata']
+              metadata_region, metadata = parse_metadata_definitions(definition_file['metadata'])
+              metadata_region_sym = metadata[:region].to_sym if metadata[:region]
+              if metadata_region_sym and !all_metadata_by_region.key?(metadata_region_sym)
+                all_metadata_by_region[metadata_region_sym] = metadata
+              end
+
+              all_regions << metadata[:region].map(&:to_sym) 
+            end
 
             all_rules_by_month.merge!(rules_by_month) { |month, existing, new|
               existing << new
