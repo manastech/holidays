@@ -47,6 +47,16 @@ module Holidays
               end
 
               all_regions << metadata_region_sym 
+
+              # For any rule that does not specify a region, use the region provided by the metadata
+              # block
+              rules_by_month.each do |month, rules|
+                rules.each do |rule|
+                  if rule[:regions].nil? or rule[:regions].empty?
+                    rule[:regions] = [metadata_region_sym]
+                  end
+                end
+              end
             end
 
             all_rules_by_month.merge!(rules_by_month) { |month, existing, new|
@@ -110,12 +120,7 @@ module Holidays
                 definition.each do |key, val|
                   # Ruby 2.4 doesn't have the `transform_keys` method. Once we drop 2.4 support we can
                   # use `val.transform_keys!(&:to_sym) if val.is_a?(Hash)` instead of this `if` statement.
-                  if val.is_a?(Hash)
-                    val = val.keys.each_with_object({}) do |k, result|
-                      result[k.to_sym] = val[k]
-                    end
-                  end
-
+                  val.transform_keys!(&:to_sym) if val.is_a?(Hash)
                   rule[key.to_sym] = val
                 end
 
