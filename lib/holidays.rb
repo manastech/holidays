@@ -110,6 +110,12 @@ module Holidays
       Holidays::REGIONS
     end
 
+    def region_metadata(region_name)
+      return Holidays::REGION_METADATA_LOOKUP unless region.presence
+
+      Holidays::REGION_METADATA_LOOKUP[region_name.to_sym]
+    end
+
     def load_custom(*files)
       regions, rules_by_month, custom_methods, _ = Factory::Definition.file_parser.parse_definition_files(files)
 
