@@ -86,8 +86,8 @@ module Holidays
         def parse_metadata_definitions(metadata_definitions)
           metadata_definitions.transform_keys!(&:to_sym) if metadata_definitions.is_a?(Hash)
 
-          if metadata[:region]
-            metadata_region = metadata_definitions[:region].to_sym if metadata[:region]
+          if metadata_definitions[:region]
+            metadata_region = metadata_definitions[:region].to_sym if metadata_definitions[:region]
             metadata_definitions.delete(:region)
           end
           
