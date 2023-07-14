@@ -103,6 +103,7 @@ module Holidays
             metadata_definitions.delete(:region)
           end
           
+          puts "Got metadata region: #{metadata_region}"
           [metadata_region, metadata_definitions]
         end
 
