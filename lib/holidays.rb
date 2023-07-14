@@ -111,7 +111,7 @@ module Holidays
     end
 
     def region_metadata(region_name)
-      return Holidays::REGION_METADATA_LOOKUP unless region.presence
+      return Holidays::REGION_METADATA_LOOKUP unless region_name.presence
 
       Holidays::REGION_METADATA_LOOKUP[region_name.to_sym]
     end
