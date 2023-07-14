@@ -73,7 +73,7 @@ module Holidays
             all_tests += @test_parser.call(definition_file['tests'])
           end
 
-          all_regions.flatten!.uniq!
+          all_regions.uniq!
 
           [all_regions, all_rules_by_month, all_metadata_by_region, all_custom_methods, all_tests]
         end
