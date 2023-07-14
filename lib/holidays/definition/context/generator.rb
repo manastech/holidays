@@ -36,8 +36,10 @@ module Holidays
 
             custom_methods = @custom_method_parser.call(definition_file['methods'])
 
-            regions, rules_by_month = parse_month_definitions(definition_file['months'], custom_methods)
-            all_regions << regions.flatten
+            # regions, rules_by_month = parse_month_definitions(definition_file['months'], custom_methods)
+            rules_by_month = parse_month_definitions(definition_file['months'], custom_methods)
+
+            # all_regions << regions.flatten
 
             if definition_file['metadata']
               metadata_region, metadata = parse_metadata_definitions(definition_file['metadata'])
@@ -48,13 +50,11 @@ module Holidays
 
               all_regions << metadata_region_sym 
 
-              # For any rule that does not specify a region, use the region provided by the metadata
-              # block
               rules_by_month.each do |month, rules|
                 rules.each do |rule|
-                  if rule[:regions].nil? or rule[:regions].empty?
-                    rule[:regions] = [metadata_region_sym]
-                  end
+                  # if rule[:regions].nil? or rule[:regions].empty?
+                  rule[:regions] = [metadata_region_sym]
+                  # end
                 end
               end
             end
@@ -109,7 +109,7 @@ module Holidays
 
         #FIXME This should be a 'month_definitions_parser' like the above parser
         def parse_month_definitions(month_definitions, parsed_custom_methods)
-          regions = []
+          # regions = []
           rules_by_month = {}
 
           if month_definitions
@@ -132,8 +132,8 @@ module Holidays
                   rule[:year_ranges][:between] = Range.new(start_year, end_year)
                 end
 
-                rule[:regions] = rule[:regions].collect { |r| r.to_sym } if rule[:regions]
-                regions << rule[:regions] || []
+                # rule[:regions] = rule[:regions].collect { |r| r.to_sym } if rule[:regions]
+                # regions << rule[:regions] || []
 
                 exists = false
                 rules_by_month[month].each do |ex|
@@ -156,7 +156,8 @@ module Holidays
             end
           end
 
-          [regions, rules_by_month]
+          # [regions, rules_by_month]
+          rules_by_month
         end
 
         #FIXME This should really be split out and tested with its own unit tests.
