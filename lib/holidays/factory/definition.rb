@@ -23,28 +23,6 @@ module Holidays
   module Factory
     module Definition
       class << self
-        def file_parser
-          Holidays::Definition::Context::Generator.new(
-            custom_method_parser,
-            custom_method_source_decorator,
-            custom_methods_repository,
-            test_parser,
-            test_generator,
-            module_generator,
-          )
-        end
-
-        def source_generator
-          Holidays::Definition::Context::Generator.new(
-            custom_method_parser,
-            custom_method_source_decorator,
-            custom_methods_repository,
-            test_parser,
-            test_generator,
-            module_generator,
-          )
-        end
-
         def function_processor
           Holidays::Definition::Context::FunctionProcessor.new(
             custom_methods_repository,
@@ -60,18 +38,8 @@ module Holidays
           )
         end
 
-        def custom_method_parser
-          Holidays::Definition::Parser::CustomMethod.new(
-            custom_method_validator,
-          )
-        end
-
         def custom_method_proc_decorator
           Holidays::Definition::Decorator::CustomMethodProc.new
-        end
-
-        def custom_method_source_decorator
-          Holidays::Definition::Decorator::CustomMethodSource.new
         end
 
         def region_validator
@@ -115,26 +83,6 @@ module Holidays
           Holidays::Definition::Context::Load.new(
             merger,
             Holidays::configuration.full_definitions_path,
-          )
-        end
-
-        def module_generator
-          Holidays::Definition::Generator::Module.new
-        end
-
-        def test_generator
-          Holidays::Definition::Generator::Test.new(
-            test_decorator,
-          )
-        end
-
-        def test_decorator
-          Holidays::Definition::Decorator::Test.new
-        end
-
-        def test_parser
-          Holidays::Definition::Parser::Test.new(
-            Holidays::Definition::Validator::Test.new,
           )
         end
       end
