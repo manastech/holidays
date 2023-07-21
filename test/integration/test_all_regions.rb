@@ -6,7 +6,7 @@ class AllRegionsTests < Test::Unit::TestCase
   end
 
   def test_definition_dir
-    assert File.directory?(Holidays::FULL_DEFINITIONS_PATH)
+    assert File.directory?(Holidays.configuration.full_definitions_path)
   end
 
   def test_show_available_regions

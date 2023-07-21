@@ -1,8 +1,13 @@
 module Holidays
   #TODO This file should be renamed. It's no longer about definitions, really.
-  class LoadAllDefinitions
+  class InitializeDefinitions
     class << self
       def call
+        load_global_methods
+        load_regions
+      end
+
+      def load_global_methods
         #FIXME I need a better way to do this. I'm thinking of putting these 'common' methods
         # into some kind of definition file so it can be loaded automatically but I'm afraid
         # of making that big of a breaking API change since these are public. For the time
@@ -26,7 +31,12 @@ module Holidays
 
         Factory::Definition.custom_methods_repository.add(global_methods)
 
-        static_regions_definition = "#{Holidays::DEFINITIONS_PATH}/REGIONS.rb"
+        puts "Loaded custom methods: "
+        puts Factory::Definition.custom_methods_repository
+      end
+
+      def load_regions
+        static_regions_definition = "#{Holidays::configuration.definitions_path}/REGIONS.rb"
         require static_regions_definition
       end
 

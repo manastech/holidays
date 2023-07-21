@@ -26,6 +26,7 @@ module Holidays
           all_regions = []
           all_rules_by_month = {}
           all_custom_methods = {}
+          all_metadata_by_region = {}
           all_tests = []
 
           files.flatten!
@@ -35,9 +36,28 @@ module Holidays
 
             custom_methods = @custom_method_parser.call(definition_file['methods'])
 
-            regions, rules_by_month = parse_month_definitions(definition_file['months'], custom_methods)
+            # regions, rules_by_month = parse_month_definitions(definition_file['months'], custom_methods)
+            rules_by_month = parse_month_definitions(definition_file['months'], custom_methods)
 
-            all_regions << regions.flatten
+            # all_regions << regions.flatten
+
+            if definition_file['metadata']
+              metadata_region, metadata = parse_metadata_definitions(definition_file['metadata'])
+              metadata_region_sym = metadata_region.to_sym if metadata_region
+              if metadata_region_sym and !all_metadata_by_region.key?(metadata_region_sym)
+                all_metadata_by_region[metadata_region_sym] = metadata
+              end
+
+              all_regions << metadata_region_sym 
+
+              rules_by_month.each do |month, rules|
+                rules.each do |rule|
+                  # if rule[:regions].nil? or rule[:regions].empty?
+                  rule[:regions] = [metadata_region_sym]
+                  # end
+                end
+              end
+            end
 
             all_rules_by_month.merge!(rules_by_month) { |month, existing, new|
               existing << new
@@ -53,9 +73,9 @@ module Holidays
             all_tests += @test_parser.call(definition_file['tests'])
           end
 
-          all_regions.flatten!.uniq!
+          all_regions.uniq!
 
-          [all_regions, all_rules_by_month, all_custom_methods, all_tests]
+          [all_regions, all_rules_by_month, all_metadata_by_region, all_custom_methods, all_tests]
         end
 
         def generate_definition_source(module_name, files, regions, rules_by_month, custom_methods, tests)
@@ -75,9 +95,21 @@ module Holidays
 
         private
 
+        def parse_metadata_definitions(metadata_definitions)
+          metadata_definitions.transform_keys!(&:to_sym) if metadata_definitions.is_a?(Hash)
+
+          if metadata_definitions[:region]
+            metadata_region = metadata_definitions[:region].to_sym if metadata_definitions[:region]
+            metadata_definitions.delete(:region)
+          end
+          
+          puts "Got metadata region: #{metadata_region}"
+          [metadata_region, metadata_definitions]
+        end
+
         #FIXME This should be a 'month_definitions_parser' like the above parser
         def parse_month_definitions(month_definitions, parsed_custom_methods)
-          regions = []
+          # regions = []
           rules_by_month = {}
 
           if month_definitions
@@ -89,12 +121,7 @@ module Holidays
                 definition.each do |key, val|
                   # Ruby 2.4 doesn't have the `transform_keys` method. Once we drop 2.4 support we can
                   # use `val.transform_keys!(&:to_sym) if val.is_a?(Hash)` instead of this `if` statement.
-                  if val.is_a?(Hash)
-                    val = val.keys.each_with_object({}) do |k, result|
-                      result[k.to_sym] = val[k]
-                    end
-                  end
-
+                  val.transform_keys!(&:to_sym) if val.is_a?(Hash)
                   rule[key.to_sym] = val
                 end
 
@@ -105,8 +132,8 @@ module Holidays
                   rule[:year_ranges][:between] = Range.new(start_year, end_year)
                 end
 
-                rule[:regions] = rule[:regions].collect { |r| r.to_sym }
-                regions << rule[:regions]
+                # rule[:regions] = rule[:regions].collect { |r| r.to_sym } if rule[:regions]
+                # regions << rule[:regions] || []
 
                 exists = false
                 rules_by_month[month].each do |ex|
@@ -129,7 +156,8 @@ module Holidays
             end
           end
 
-          [regions, rules_by_month]
+          # [regions, rules_by_month]
+          rules_by_month
         end
 
         #FIXME This should really be split out and tested with its own unit tests.
@@ -197,10 +225,14 @@ module Holidays
         # What we should do is ensure that all custom methods are loaded into the repo as soon as they are parsed
         # so we only have one place to look.
         def get_function_arguments(function_id, parsed_custom_methods)
+          puts "Searching for function arguments for function #{function_id}"
           if method = @custom_methods_repository.find(function_id)
+            puts "found args: #{method.parameters}"
             method.parameters.collect { |arg| arg[1] }
           elsif method = parsed_custom_methods[function_id]
             method.arguments.collect { |arg| arg.to_sym }
+          else
+            puts "did not find arguments"
           end
         end
       end
