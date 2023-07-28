@@ -1,7 +1,4 @@
 require 'holidays/definition/context/generator'
-require 'holidays/definition/context/merger'
-require 'holidays/definition/context/function_processor'
-require 'holidays/definition/context/load'
 require 'holidays/definition/decorator/custom_method_proc'
 require 'holidays/definition/decorator/custom_method_source'
 require 'holidays/definition/decorator/test'
@@ -23,19 +20,12 @@ module Holidays
   module Factory
     module Definition
       class << self
-        def function_processor
-          Holidays::Definition::Context::FunctionProcessor.new(
-            custom_methods_repository,
-            proc_result_cache_repository,
-          )
-        end
-
-        def merger
-          Holidays::Definition::Context::Merger.new(
-            holidays_by_month_repository,
-            regions_repository,
-            custom_methods_repository,
-          )
+        def merge
+          #FIXME Does this need to come in this exact order? God I hope not.
+          # If not then we should swap the order so it matches the init.
+          regions_repository.add(target_regions)
+          holidays_by_month_repository.add(target_holidays)
+          custom_methods_repository.add(target_custom_methods)
         end
 
         def custom_method_proc_decorator

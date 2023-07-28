@@ -5,7 +5,7 @@ require 'date'
 require 'digest/md5'
 require 'holidays/factory/definition'
 require 'holidays/factory/date_calculator'
-require 'holidays/factory/finder'
+require 'holidyas/finder'
 require 'holidays/errors'
 require 'holidays/load_all_definitions'
 
@@ -29,8 +29,6 @@ module Holidays
       @full_definitions_path = path
     end
   end
-  # DEFINITIONS_PATH = 'generated_definitions'
-  # FULL_DEFINITIONS_PATH = File.expand_path(File.dirname(__FILE__) + "/#{DEFINITIONS_PATH}")
 
   class << self
 
@@ -66,7 +64,7 @@ module Holidays
         return cached_holidays
       end
 
-      Factory::Finder.between.call(start_date, end_date, options)
+      Holidays::Finder.between(start_date, end_date, options)
     end
 
     #FIXME All other methods start with a date and require a date. For the next
@@ -82,7 +80,7 @@ module Holidays
 
       from_date = get_date(from_date)
 
-      Factory::Finder.next_holiday.call(holidays_count, from_date, options)
+      Holidays::Finder.next_holiday(holidays_count, from_date, options)
     end
 
     #FIXME All other methods start with a date and require a date. For the next
@@ -96,7 +94,7 @@ module Holidays
       from_date = from_date.new_offset(0) + from_date.offset if from_date.respond_to?(:new_offset)
       from_date = get_date(from_date)
 
-      Factory::Finder.year_holiday.call(from_date, options)
+      Holidays::Finder.year_holiday(from_date, options)
     end
 
     def cache_between(start_date, end_date, *options)
@@ -129,7 +127,6 @@ module Holidays
     end
 
     def load_all
-      # path = FULL_DEFINITIONS_PATH + "/"
       path = Holidays.configuration.full_definitions_path + "/"
 
       Dir.foreach(path) do |item|
@@ -154,4 +151,3 @@ module Holidays
   end
 end
 
-# Holidays::LoadAllDefinitions.call
