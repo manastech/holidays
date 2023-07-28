@@ -2,9 +2,6 @@ require 'holidays/definition/context/generator'
 require 'holidays/definition/decorator/custom_method_proc'
 require 'holidays/definition/decorator/custom_method_source'
 require 'holidays/definition/decorator/test'
-require 'holidays/definition/generator/module'
-require 'holidays/definition/generator/regions'
-require 'holidays/definition/generator/test'
 require 'holidays/definition/parser/custom_method'
 require 'holidays/definition/parser/test'
 require 'holidays/definition/repository/holidays_by_month'
@@ -63,10 +60,6 @@ module Holidays
 
         def custom_methods_repository
           @custom_methods_repository ||= Holidays::Definition::Repository::CustomMethods.new
-        end
-
-        def regions_generator
-          Holidays::Definition::Generator::Regions.new
         end
 
         def loader

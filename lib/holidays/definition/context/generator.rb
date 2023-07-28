@@ -1,8 +1,7 @@
 require 'yaml'
 require 'holidays/definition/parser/custom_method.rb'
 require 'holidays/definition/parser/test.rb'
-require 'holidays/definition/generator/module.rb'
-require 'holidays/definition/generator/test.rb'
+require 'holidays/definition/generator.rb'
 require 'holidays/definition/decorator/custom_method_source.rb'
 
 module Holidays
@@ -70,8 +69,8 @@ module Holidays
         custom_method_string << Holidays::CustomMethodSourceDecorator.create_custom_method_source(code) + ",\n\n"
       end
 
-      module_src = Holidays::ModuleGenerator.create_module_source(module_name, files, regions, month_strings, custom_method_string)
-      test_src = Holidays::TestGenerator.create_test_source(module_name, files, tests)
+      module_src = Holidays::Generator.generate_module_source(module_name, files, regions, month_strings, custom_method_string)
+      test_src = Holidays::Generator.generate_test_source(module_name, files, tests)
 
       return module_src, test_src || ''
     end

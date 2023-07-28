@@ -5,7 +5,7 @@ require 'date'
 require 'digest/md5'
 require 'holidays/factory/definition'
 require 'holidays/factory/date_calculator'
-require 'holidyas/finder'
+require 'holidays/finder'
 require 'holidays/errors'
 require 'holidays/load_all_definitions'
 
