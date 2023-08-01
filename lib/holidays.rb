@@ -4,7 +4,6 @@ $:.unshift File.dirname(__FILE__)
 require 'date'
 require 'digest/md5'
 require 'holidays/factory/definition'
-require 'holidays/factory/date_calculator'
 require 'holidays/finder'
 require 'holidays/errors'
 require 'holidays/load_all_definitions'
