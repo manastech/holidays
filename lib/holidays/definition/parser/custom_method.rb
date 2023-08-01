@@ -37,11 +37,11 @@ module Holidays::CustomMethod
     end
 
     def valid?(name, arguments, source)
-      valid_name = !m[:name].nil? && !m[:name].empty?
-      valid_arguments = m[:arguments].split(",").all? do |arg|
+      valid_name = !name.nil? && !name.empty?
+      valid_arguments = arguments.split(",").all? do |arg|
         arg == arg.chomp && VALID_ARGUMENTS.include?(arg.strip)
       end
-      valid_source = !m[:source].nil? && !m[:source].empty?
+      valid_source = !source.nil? && !source.empty?
 
       valid_name && valid_arguments && valid_source
     end

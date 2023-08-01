@@ -1,3 +1,5 @@
+require "holidays/date_calculator/day_of_month"
+
 module Holidays
   #TODO This file should be renamed. It's no longer about definitions, really.
   class InitializeDefinitions
@@ -23,7 +25,7 @@ module Holidays
           "to_weekday_if_boxing_weekend(date)" => weekend_modifier.method(:to_weekday_if_boxing_weekend).to_proc,
           "to_weekday_if_boxing_weekend_from_year(year)" => weekend_modifier.method(:to_weekday_if_boxing_weekend_from_year).to_proc,
           "to_weekday_if_weekend(date)" => weekend_modifier.method(:to_weekday_if_weekend).to_proc,
-          "calculate_day_of_month(year, month, day, wday)" => day_of_month_calculator.method(:call).to_proc,
+          "calculate_day_of_month(year, month, day, wday)" => Holidays::DateCalculator.method(:day_of_month).to_proc,
           "to_weekday_if_boxing_weekend_from_year_or_to_tuesday_if_monday(year)" => weekend_modifier.method(:to_weekday_if_boxing_weekend_from_year_or_to_tuesday_if_monday).to_proc,
           "to_tuesday_if_sunday_or_monday_if_saturday(date)" => weekend_modifier.method(:to_tuesday_if_sunday_or_monday_if_saturday).to_proc,
           "lunar_to_solar(year, month, day, region)" => lunar_date.method(:to_solar).to_proc, 
@@ -52,10 +54,6 @@ module Holidays
 
       def weekend_modifier
         Factory::DateCalculator.weekend_modifier
-      end
-
-      def day_of_month_calculator
-        Factory::DateCalculator.day_of_month_calculator
       end
 
       def lunar_date

@@ -14,15 +14,15 @@ module Holidays::DateCalculator
   #
   # ===== Examples
   # First Monday of January, 2008:
-  #   Holidays::Factory::DateCalculator.day_of_month_calculator.call(2008, 1, :first, :monday)
+  #   Holidays::DateCalculator.day_of_month(2008, 1, :first, :monday)
   #   => 7
   #
   # Third Thursday of December, 2008:
-  #   Holidays::Factory::DateCalculator.day_of_month_calculator.call(2008, 12, :third, :thursday)
+  #   Holidays::DateCalculator.day_of_month(2008, 12, :third, :thursday)
   #   => 18
   #
   # Last Monday of January, 2008:
-  #   Holidays::Factory::DateCalculator.day_of_month_calculator.call(2008, 1, :last, 1)
+  #   Holidays::DateCalculator.day_of_month(2008, 1, :last, 1)
   #   => 28
   #--
   # see http://www.irt.org/articles/js050/index.htm

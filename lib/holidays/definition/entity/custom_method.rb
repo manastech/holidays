@@ -1,5 +1,5 @@
 module Holidays
-  module Definition
+  module CustomMethod
     module Entity
       CustomMethod = Struct.new(:name, :arguments, :source) do
         def initialize(fields = {})

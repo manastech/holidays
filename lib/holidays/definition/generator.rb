@@ -4,35 +4,36 @@ module Holidays::Definition
     # holiday definitions, but that does not make these countries subregions of one another.
     NORTH_AMERICA_REGIONS = %i[ca mx us].freeze
 
-    # Generate the source code for `REGIONS.rb`. This file provides some lookup tables for getting
-    # regions, region metatdata, or the parents of subregions.
-    def generate_regions(regions, metadata_by_region)
-      raise ArgumentError.new("regions cannot be missing") if regions.nil?
-      raise ArgumentError.new("regions must be a hash") unless regions.is_a?(Hash)
-      raise ArgumentError.new("regions cannot be empty") if regions.empty?
+    class << self
+      # Generate the source code for `REGIONS.rb`. This file provides some lookup tables for getting
+      # regions, region metatdata, or the parents of subregions.
+      def generate_regions(regions, metadata_by_region)
+        raise ArgumentError.new("regions cannot be missing") if regions.nil?
+        raise ArgumentError.new("regions must be a hash") unless regions.is_a?(Hash)
+        raise ArgumentError.new("regions cannot be empty") if regions.empty?
 
-      raise ArgumentError.new("metadata_by_region cannot be missing") if metadata_by_region.nil?
-      raise ArgumentError.new("metadata_by_region must be a hash") unless metadata_by_region.is_a?(Hash)
+        raise ArgumentError.new("metadata_by_region cannot be missing") if metadata_by_region.nil?
+        raise ArgumentError.new("metadata_by_region must be a hash") unless metadata_by_region.is_a?(Hash)
 
-      <<-EOF
+        <<-EOF
 # encoding: utf-8
 module Holidays
-REGIONS = #{region_array(regions)}
+  REGIONS = #{region_array(regions)}
 
-PARENT_REGION_LOOKUP = #{generate_parent_region_lookup(regions)}
+  PARENT_REGION_LOOKUP = #{generate_parent_region_lookup(regions)}
 
-REGION_METADATA_LOOKUP = #{metadata_by_region}
+  REGION_METADATA_LOOKUP = #{metadata_by_region}
 end
 EOF
-    end
+      end
 
-    # Generate the source code for a holiday definition's tests.
-    def generate_test_source(module_name, file_names, tests)
-      raise ArgumentError.new("module_name cannot be missing") if module_name.nil? || module_name.empty?
-      raise ArgumentError.new("file_names for '#{module_name}' cannot be missing") if file_names.nil? || file_names.empty?
-      raise ArgumentError.new("tests for '#{module_name}' cannot be missing") if tests.nil?
+      # Generate the source code for a holiday definition's tests.
+      def generate_test_source(module_name, file_names, tests)
+        raise ArgumentError.new("module_name cannot be missing") if module_name.nil? || module_name.empty?
+        raise ArgumentError.new("file_names for '#{module_name}' cannot be missing") if file_names.nil? || file_names.empty?
+        raise ArgumentError.new("tests for '#{module_name}' cannot be missing") if tests.nil?
 
-      <<-EndOfTests
+        <<-EndOfTests
 # encoding: utf-8
 require File.expand_path(File.dirname(__FILE__)) + '/../test_helper'
 
@@ -41,90 +42,91 @@ require File.expand_path(File.dirname(__FILE__)) + '/../test_helper'
 # Definitions loaded: #{file_names.join(', ')}
 class #{module_name.to_s.capitalize}DefinitionTests < Test::Unit::TestCase  # :nodoc:
 
-def test_#{module_name.to_s.downcase}#{decorate_tests(tests)}
-end
+  def test_#{module_name.to_s.downcase}#{decorate_tests(tests)}
+  end
 end
 EndOfTests
-    end
+      end
 
-    # Generates the source code for a holiday definition. These will be organized by country/parent region,
-    # with that parent being used as a module name.
-    def generate_module_source(module_name, files, regions, month_strings, custom_methods)
-      raise ArgumentError.new("module name cannot be nil") if module_name.nil?
-      raise ArgumentError.new("module name cannot be blank") if module_name.empty?
+      # Generates the source code for a holiday definition. These will be organized by country/parent region,
+      # with that parent being used as a module name.
+      def generate_module_source(module_name, files, regions, month_strings, custom_methods)
+        raise ArgumentError.new("module name cannot be nil") if module_name.nil?
+        raise ArgumentError.new("module name cannot be blank") if module_name.empty?
 
-      raise ArgumentError.new("files cannot be nil") if files.nil?
-      raise ArgumentError.new("files cannot be empty") if files.empty?
-      raise ArgumentError.new("files must all be strings") unless files.all? { |f| f.is_a?(String) }
+        raise ArgumentError.new("files cannot be nil") if files.nil?
+        raise ArgumentError.new("files cannot be empty") if files.empty?
+        raise ArgumentError.new("files must all be strings") unless files.all? { |f| f.is_a?(String) }
 
-      raise ArgumentError.new("regions cannot be nil") if regions.nil?
-      raise ArgumentError.new("regions cannot be empty") if regions.empty?
+        raise ArgumentError.new("regions cannot be nil") if regions.nil?
+        raise ArgumentError.new("regions cannot be empty") if regions.empty?
 
-      raise ArgumentError.new("month strings cannot be nil") if month_strings.nil?
-      raise ArgumentError.new("month strings cannot be empty") if month_strings.empty?
+        raise ArgumentError.new("month strings cannot be nil") if month_strings.nil?
+        raise ArgumentError.new("month strings cannot be empty") if month_strings.empty?
 
-      <<-EOM
+        <<-EOM
 # encoding: utf-8
 module Holidays
-# This file is generated by the Ruby Holidays gem.
-#
-# Definitions loaded: #{files.join(', ')}
-#
-# All the definitions are available at https://github.com/holidays/holidays
-module #{module_name.to_s.upcase} # :nodoc:
-def self.defined_regions
-  [:#{regions.join(', :')}]
-end
-
-def self.holidays_by_month
-  {
-      #{month_strings.join(",\n")}
-  }
-end
-
-def self.custom_methods
-  {
-      #{custom_methods}
-  }
-end
-end
-end
-      EOM
+  # This file is generated by the Ruby Holidays gem.
+  #
+  # Definitions loaded: #{files.join(', ')}
+  #
+  # All the definitions are available at https://github.com/holidays/holidays
+  module #{module_name.to_s.upcase} # :nodoc:
+    def self.defined_regions
+      [:#{regions.join(', :')}]
     end
 
-    private
+    def self.holidays_by_month
+      {
+          #{month_strings.join(",\n")}
+      }
+    end
 
-    def region_array(regions)
-      all_regions = []
-
-      regions.each do |region, subregions|
-        all_regions << subregions
+    def self.custom_methods
+      {
+          #{custom_methods}
+      }
+    end
+  end
+end
+        EOM
       end
 
-      all_regions.flatten.uniq
-    end
+      private
 
-    def generate_parent_region_lookup(regions)
-      lookup = {}
+      def region_array(regions)
+        all_regions = []
 
-      regions.each do |region, subregions|
-        subregions.each do |subregion|
-          parent_region = NORTH_AMERICA_REGIONS.include?(subregion) ? subregion : region
-          lookup[subregion] = parent_region unless lookup.has_key?(subregion)
+        regions.each do |region, subregions|
+          all_regions << subregions
         end
+
+        all_regions.flatten.uniq
       end
 
-      lookup
-    end
+      def generate_parent_region_lookup(regions)
+        lookup = {}
 
-    def decorate_tests(tests)
-      out = ""
+        regions.each do |region, subregions|
+          subregions.each do |subregion|
+            parent_region = NORTH_AMERICA_REGIONS.include?(subregion) ? subregion : region
+            lookup[subregion] = parent_region unless lookup.has_key?(subregion)
+          end
+        end
 
-      tests.each do |t|
-        out << "\n    " + Holidays::TestDecorator.create_test_source(t)
+        lookup
       end
 
-      out
+      def decorate_tests(tests)
+        out = ""
+
+        tests.each do |t|
+          out << "\n    " + Holidays::TestDecorator.create_test_source(t)
+        end
+
+        out
+      end
     end
   end
 end

@@ -32,10 +32,6 @@ module Holidays
         def weekend_modifier
           Holidays::DateCalculator::WeekendModifier.new
         end
-
-        def day_of_month_calculator
-          Holidays::DateCalculator::DayOfMonth.new
-        end
       end
     end
   end
