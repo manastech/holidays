@@ -1,6 +1,7 @@
 require "holidays/date_calculator/day_of_month"
 require "holidays/date_calculator/lunar_date"
 require "holidays/date_calculator/weekend_modifier"
+require "holidays/date_calculator/easter"
 
 module Holidays
   #TODO This file should be renamed. It's no longer about definitions, really.
@@ -21,7 +22,7 @@ module Holidays
         global_methods = {
           "easter(year)" => Holidays::DateCalculator::Easter::Gregorian.method(:calculate_easter_for).to_proc,
           "orthodox_easter(year)" => Holidays::DateCalculator::Easter::Gregorian.method(:calculate_orthodox_easter_for).to_proc,
-          "orthodox_easter_julian(year)" => Holidays::DateCalculator::Easter::Julien.method(:calculate_orthodox_easter_for).to_proc,
+          "orthodox_easter_julian(year)" => Holidays::DateCalculator::Easter::Julian.method(:calculate_orthodox_easter_for).to_proc,
           "to_monday_if_sunday(date)" => Holidays::DateCalculator.method(:to_monday_if_sunday).to_proc,
           "to_monday_if_weekend(date)" => Holidays::DateCalculator.method(:to_monday_if_weekend).to_proc,
           "to_weekday_if_boxing_weekend(date)" => Holidays::DateCalculator.method(:to_weekday_if_boxing_weekend).to_proc,
