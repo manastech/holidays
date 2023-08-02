@@ -1,8 +1,7 @@
 require 'yaml'
-require 'holidays/definition/parser/custom_method.rb'
+require 'holidays/definition/custom_method.rb'
 require 'holidays/definition/parser/test.rb'
 require 'holidays/definition/generator.rb'
-require 'holidays/definition/decorator/custom_method_source.rb'
 
 module Holidays
   class << self
@@ -20,8 +19,11 @@ module Holidays
       files.each do |file|
         definition_file = YAML.load_file(file)
 
-        custom_methods = Holidays::CustomMethod.parse_custom_methods(definition_file['methods'])
-
+        custom_methods = {}
+        definition_file["methods"].each do |name, method_props|
+          cm = Holidays::CustomMethod.from_yaml(name, method_props)
+          custom_methods[cm.method_key] = cm
+        end
 
         rules_by_month = parse_month_definitions(definition_file['months'], custom_methods)
 
@@ -66,7 +68,7 @@ module Holidays
       # Build the custom methods string
       custom_method_string = ''
       custom_methods.each do |key, code|
-        custom_method_string << Holidays::CustomMethodSourceDecorator.create_custom_method_source(code) + ",\n\n"
+        custom_method_string << code.to_source + ",\n\n"
       end
 
       module_src = Holidays::Definition::Generator.generate_module_source(module_name, files, regions, month_strings, custom_method_string)
