@@ -1,5 +1,6 @@
 require 'holidays/finder/dates_driver_builder'
 require 'holidays/finder/parse_options'
+require 'holidays/definition/context/function_processor'
 
 module Holidays::Finder
   class << self

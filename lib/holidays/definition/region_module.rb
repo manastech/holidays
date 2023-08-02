@@ -121,10 +121,7 @@ EndOfTests
     end
 
     def regions
-      all_regions = [name.to_sym]
-      all_regions += definitions.map { |d| d.region.to_sym }
-      all_regions.flatten!
-      all_regions
+      definitions.map { |d| d.region.to_sym }
     end
   end
 end

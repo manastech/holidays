@@ -55,11 +55,14 @@ module Holidays
         else
           regions.each do |r|
             if is_wildcard?(r)
-              loaded_regions << load_wildcard_parent!(r)
+              prefix = get_region_parent(r)
+              loaded_regions << load_region!(prefix)
             else
               parent = regions_repo.parent_region_lookup(r)
 
               target = parent || r
+
+              puts "Loading target region #{target}"
 
               if regions_repo.loaded?(target)
                 loaded_regions << r
@@ -79,7 +82,15 @@ module Holidays
       def region_is_valid?(r)
         return false unless r.is_a?(Symbol)
 
-        region = find_wildcard_region(r)
+        if is_wildcard? r
+          region = get_region_parent(r)
+        else
+          region = r
+        end
+
+
+        puts "Generated regions: #{Factory::Definition.regions_repository.all_generated}"
+        puts "Looking up region: #{region}"
 
         (region == :any ||
          Factory::Definition.regions_repository.loaded?(region) ||
@@ -90,17 +101,11 @@ module Holidays
         r.to_s.end_with?('_') 
       end
 
-      def load_wildcard_parent!(wildcard_region)
-        prefix = find_wildcard_base(wildcard_region)
-        load_region!(prefix)
-      end
-
-      # Ex: :gb_ transformed to :gb
-      def find_wildcard_base(region)
+      def get_region_parent(region)
         region.to_s.split('_').first.to_sym
       end
   
-      def load_region!(r)
+      def load_region!(region)
         region_definition_file = "#{Holidays::configuration.full_definitions_path}/#{region}"
         require region_definition_file
 

@@ -8,7 +8,7 @@ module Holidays
   module Factory
     module Definition
       class << self
-        def merge
+        def merge(target_regions, target_holidays, target_custom_methods)
           #FIXME Does this need to come in this exact order? God I hope not.
           # If not then we should swap the order so it matches the init.
           regions_repository.add(target_regions)
