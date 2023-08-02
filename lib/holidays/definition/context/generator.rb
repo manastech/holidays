@@ -99,35 +99,17 @@ module Holidays
       month_definitions.each do |month, definitions|
         rules_by_month[month] = [] unless rules_by_month[month]
         definitions.each do |definition|
-          rule = {}
-
-          definition.each do |key, val|
-            val.transform_keys!(&:to_sym) if val.is_a?(Hash)
-            rule[key.to_sym] = val
-          end
-
-          if rule[:year_ranges] && rule[:year_ranges].key?(:between)
-            start_year = rule[:year_ranges][:between]["start"].to_i
-            end_year = rule[:year_ranges][:between]["end"].to_i
-
-            rule[:year_ranges][:between] = Range.new(start_year, end_year)
-          end
+          rule = Holidays::HolidayRule.from_yaml(definition, parsed_custom_methods)
 
           exists = false
           rules_by_month[month].each do |ex|
-            if ex[:name] == rule[:name] and ex[:wday] == rule[:wday] and ex[:mday] == rule[:mday] and ex[:week] == rule[:week] and ex[:type] == rule[:type] and ex[:function] == rule[:function] and ex[:observed] == rule[:observed] and ex[:year_ranges] == rule[:year_ranges]
-              ex[:regions] << rule[:regions].flatten
+            if ex == rule
+              ex.regions << rule.regions.flatten
               exists = true
             end
           end
 
           unless exists
-            # This will add in the custom method arguments so they are immediately
-            # available for 'on the fly' def loading.
-            if rule[:function]
-              rule[:function_arguments] = get_function_arguments(rule[:function], parsed_custom_methods)
-            end
-
             rules_by_month[month] << rule
           end
         end
@@ -141,72 +123,13 @@ module Holidays
       month_strings = []
 
       rules_by_month.each do |month, rules|
-        month_string = "      #{month.to_s} => ["
-        rule_strings = []
-        rules.each do |rule|
-          string = '{'
-          if rule[:mday]
-            string << ":mday => #{rule[:mday]}, "
-          end
-
-          if rule[:function]
-            string << ":function => \"#{rule[:function].to_s}\", "
-
-            # We need to add in the arguments so we can know what to send in when calling the custom proc during holiday lookups.
-            # NOTE: the allowed arguments are enforced in the custom methods parser.
-            string << ":function_arguments => #{get_function_arguments(rule[:function], parsed_custom_methods)}, "
-
-            if rule[:function_modifier]
-              string << ":function_modifier => #{rule[:function_modifier].to_s}, "
-            end
-          end
-
-          # This is the 'else'. It is possible for mday AND function
-          # to be set but this is the fallback. This whole area
-          # needs to be reworked!
-          if string == '{'
-            string << ":wday => #{rule[:wday]}, :week => #{rule[:week]}, "
-          end
-
-          if rule[:year_ranges] && rule[:year_ranges].is_a?(Hash)
-            selector = rule[:year_ranges].keys.first
-            value = rule[:year_ranges][selector]
-
-            string << ":year_ranges => { :#{selector} => #{value} },"
-          end
-
-          if rule[:observed]
-            string << ":observed => \"#{rule[:observed].to_s}\", "
-            string << ":observed_arguments => #{get_function_arguments(rule[:observed], parsed_custom_methods)}, "
-          end
-
-          if rule[:type]
-            string << ":type => :#{rule[:type]}, "
-          end
-
-          # shouldn't allow the same region twice
-          string << ":name => \"#{rule[:name]}\", :regions => [:" + rule[:regions].uniq.join(', :') + "]}"
-          rule_strings << string
-        end
-        month_string << rule_strings.join(",\n            ") + "]"
-        month_strings << month_string
+        rule_string = rules.map { |rule| rule.to_source(parsed_custom_methods) }.join(",\n            ")
+        month_strings <<  "      #{month.to_s} => [#{rule_string}]"
       end
 
       return month_strings
     end
 
-    # This method sucks. The issue here is that the custom methods repo has the 'general' methods (like easter)
-    # but the 'parsed_custom_methods' have the recently parsed stuff. We don't load those until they are needed later.
-    # This entire file is a refactor target so I am adding some tech debt to get me over the hump.
-    # What we should do is ensure that all custom methods are loaded into the repo as soon as they are parsed
-    # so we only have one place to look.
-    def get_function_arguments(function_id, parsed_custom_methods)
-      if method = Holidays::Factory::Definition.custom_methods_repository.find(function_id)
-        method.parameters.collect { |arg| arg[1] }
-      elsif method = parsed_custom_methods[function_id]
-        method.arguments.collect { |arg| arg.to_sym }
-      end
-    end
   end 
 end
 
