@@ -45,8 +45,8 @@ module Holidays::Generator
 
       metadata_by_region = {}
       region_modules.each do |region_module|
-        stringified_metadata = region_module.metadata_by_region.transform_values(&:to_s)
-        metadata_by_region.merge! stringified_metadata
+        metadata_hash = region_module.metadata_by_region.transform_values(&:to_h)
+        metadata_by_region.merge! metadata_hash
       end
 
       <<-EOF

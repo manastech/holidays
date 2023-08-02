@@ -17,8 +17,8 @@ module Holidays
       )
     end
 
-    def to_s
-      { name: name, region: region }.to_s
+    def to_h
+      { name: name, region: region }
     end
   end
 end
