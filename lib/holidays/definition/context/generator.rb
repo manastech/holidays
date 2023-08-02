@@ -1,6 +1,6 @@
 require 'yaml'
 require 'holidays/definition/custom_method.rb'
-require 'holidays/definition/parser/test.rb'
+require 'holidays/definition/test.rb'
 require 'holidays/definition/generator.rb'
 
 module Holidays
@@ -48,13 +48,15 @@ module Holidays
           existing.flatten!
         }
 
-        #FIXME This is a problem. We will have a 'global' list of methods. That's always bad. What effects will this have?
+        # FIXME This is a problem. We will have a 'global' list of methods. That's always bad. What effects will this have?
         # This is an existing problem (just so we are clear). An issue would be extremely rare because we are generally parsing
         # single files/custom files. But it IS possible that we would parse a bunch of things at the same time and step
         # on each other so we need a solution.
         all_custom_methods.merge!(custom_methods)
 
-        all_tests += Holidays::TestParser.parse_tests(definition_file['tests'])
+        definition_file["tests"].each do |t|
+          all_tests += Holidays::Test.from_yaml(t)
+        end
       end
 
       all_regions.uniq!

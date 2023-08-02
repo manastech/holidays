@@ -122,7 +122,7 @@ end
         out = ""
 
         tests.each do |t|
-          out << "\n    " + Holidays::TestDecorator.create_test_source(t)
+          out << "\n    " + t.to_source
         end
 
         out
