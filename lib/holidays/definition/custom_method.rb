@@ -5,7 +5,7 @@ module Holidays
     VALID_ARGUMENTS = ["date", "year", "month", "day", "region"]
 
     attr_accessor :name
-    attr_accessor :argument 
+    attr_accessor :arguments 
     attr_accessor :source
 
     def initialize(name, arguments, source)
@@ -44,7 +44,7 @@ module Holidays
     end
 
     def args_string
-      args.join(", ")[0..-1]
+      arguments.join(", ")[0..-1]
     end
 
   end

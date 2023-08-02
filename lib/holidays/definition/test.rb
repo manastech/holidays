@@ -1,5 +1,3 @@
-require 'holidays/definition/entity/test'
-
 module Holidays
   # `Test` refers to the tests that a holiday definition author can include in a definition file. These tests help us
   # verify that the definitions - especially ones utilizing custom methods - will produce the expected results.
