@@ -30,7 +30,7 @@ module Holidays
 
       month_strings = []
       rules_by_month.each do |month, rules|
-        rule_string = rules.map { |rule| rule.to_source(parsed_custom_methods) }.join(",\n            ")
+        rule_string = rules.map { |rule| rule.to_source(custom_methods) }.join(",\n            ")
         month_strings <<  "      #{month.to_s} => [#{rule_string}]"
       end
 
@@ -65,8 +65,8 @@ end
     end
 
     def to_test_source
-      raise ArgumentError.new("tests for '#{module_name}' cannot be missing") if tests.nil?
-
+      return nil if tests.nil? || tests.empty?
+      
       test_source_code = tests.map(&:to_source).join { |source| "\n    #{source}" } 
 
 
@@ -102,7 +102,7 @@ EndOfTests
     def custom_methods
       cm = {}
       definitions.each do |definition|
-        cm.merge! definitions.custom_methods
+        cm.merge! definition.custom_methods
       end
 
       cm
@@ -117,7 +117,7 @@ EndOfTests
     end
 
     def tests
-      definitions.flat_map { |d| d.tests }
+      definitions.flat_map { |d| d.tests || [] }
     end
 
     def regions

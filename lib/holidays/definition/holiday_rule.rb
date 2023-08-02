@@ -9,6 +9,7 @@ module Holidays
     attr_accessor :function
     attr_accessor :year_ranges
     attr_accessor :function_arguments
+    attr_accessor :function_modifier
     attr_accessor :regions
     
     def initialize(rule)
