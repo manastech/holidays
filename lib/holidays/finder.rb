@@ -1,5 +1,5 @@
-require 'holidays/finder/context/dates_driver_builder'
-require 'holidays/finder/context/parse_options'
+require 'holidays/finder/dates_driver_builder'
+require 'holidays/finder/parse_options'
 
 module Holidays::Finder
   class << self
@@ -7,8 +7,8 @@ module Holidays::Finder
       raise ArgumentError unless start_date
       raise ArgumentError unless end_date
 
-      regions, opts = Holidays::Finder::Context.parse_options(options)
-      dates_driver = Holidays::Finder::Context.dates_driver_builder(start_date, end_date)
+      regions, opts = Holidays::Finder.parse_options(options)
+      dates_driver = Holidays::Finder.dates_driver_builder(start_date, end_date)
 
       search(dates_driver, regions, opts)
         .select { |holiday| holiday[:date].between?(start_date, end_date) }
@@ -20,14 +20,14 @@ module Holidays::Finder
       raise ArgumentError if holidays_count <= 0
       raise ArgumentError unless from_date
 
-      regions, opts = Holidays::Finder::Context.parse_options(options)
+      regions, opts = Holidays::Finder.parse_options(options)
 
       holidays = []
 
       # This could be smarter but I don't have any evidence that just checking for
       # the next 12 months will cause us issues. If it does we can implement something
       # smarter here to check in smaller increments.
-      dates_driver = Holidays::Finder::Context.dates_driver_builder(from_date, from_date >> 12)
+      dates_driver = Holidays::Finder.dates_driver_builder(from_date, from_date >> 12)
 
       search(dates_driver, regions, opts)
         .sort_by { |a| a[:date] }
@@ -45,7 +45,7 @@ module Holidays::Finder
     def year_holiday(from_date, options)
       raise ArgumentError unless from_date && from_date.is_a?(Date)
 
-      regions, opts = Holidays::Finder::Context.parse_options(options)
+      regions, opts = Holidays::Finder.parse_options(options)
 
       # This could be smarter but I don't have any evidence that just checking for
       # the next 12 months will cause us issues. If it does we can implement something
@@ -53,7 +53,7 @@ module Holidays::Finder
       #
       #FIXME Could this be until the to_date instead? Save us some processing?
       #      This is matching what was in holidays.rb currently so I'm keeping it. -pp
-      dates_driver = Holidays::Finder::Context.dates_driver_builder(from_date, from_date >> 12)
+      dates_driver = Holidays::Finder.dates_driver_builder(from_date, from_date >> 12)
 
       to_date = Date.civil(from_date.year, 12, 31)
       holidays = []
