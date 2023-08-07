@@ -17,7 +17,7 @@ module Holidays
 
   class << self
     def init_data(files_to_parse)
-      Generator.parse_definition_files(files_to_parse).each do |definition|
+      Parser.parse_definition_files(files_to_parse).each do |definition|
         repository.add_region_definition(definition)
       end
 
@@ -25,7 +25,7 @@ module Holidays
     end
 
     def load_new_definition(definition_file)
-      repository.add_region_definition Generator.parse_definition_file(definition_file)
+      repository.add_region_definition Parser.parse_definition_file(definition_file)
     end
 
     def any_holidays_during_work_week?(date, *options)
