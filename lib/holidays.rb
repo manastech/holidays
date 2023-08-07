@@ -15,7 +15,7 @@ module Holidays
   DAY_SYMBOLS = Date::DAYNAMES.collect { |n| n.downcase.intern }
 
   class << self
-    def initialize(files_to_parse)
+    def init_data(files_to_parse)
       Generator.parse_definition_files(files_to_parse).each do |definition|
         repository.add_region_definition(definition)
       end
