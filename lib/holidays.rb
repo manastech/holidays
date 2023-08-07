@@ -6,8 +6,9 @@ require 'digest/md5'
 require 'holidays/finder'
 require 'holidays/errors'
 require 'holidays/generator'
-require 'holidays/repository.rb'
-require 'holidays/cache_repository.rb'
+require 'holidays/repository'
+require 'holidays/cache_repository'
+require 'holidays/date_calculator'
 
 module Holidays
   WEEKS = {:first => 1, :second => 2, :third => 3, :fourth => 4, :fifth => 5, :last => -1, :second_last => -2, :third_last => -3}
@@ -132,7 +133,7 @@ module Holidays
         Holidays::CustomMethod.from_proc("calculate_day_of_month", "year, month, day, wday", Holidays::DateCalculator.method(:day_of_month).to_proc),
         Holidays::CustomMethod.from_proc("to_weekday_if_boxing_weekend_from_year_or_to_tuesday_if_monday", "year", Holidays::DateCalculator.method(:to_weekday_if_boxing_weekend_from_year_or_to_tuesday_if_monday).to_proc),
         Holidays::CustomMethod.from_proc("to_tuesday_if_sunday_or_monday_if_saturday", "date", Holidays::DateCalculator.method(:to_tuesday_if_sunday_or_monday_if_saturday).to_proc),
-        Holidays::CustomMethod.from_proc("lunar_to_solar", "year, month, day, region", Holidays::DateCalculator.method(:to_solar).to_proc) ,
+        Holidays::CustomMethod.from_proc("lunar_to_solar", "year, month, day, region", Holidays::DateCalculator::Lunar.method(:to_solar).to_proc) ,
       ]
 
       global_methods.each do |method|

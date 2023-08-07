@@ -10,7 +10,7 @@ module Holidays
 
     def initialize(name, arguments, source, proc = nil)
       raise ArgumentError if name.nil? || name.empty? || !name.is_a?(String)
-      raise ArgumentError if source.nil? || source.empty? || !source.is_a?(String)
+      raise ArgumentError if source.nil? || !source.is_a?(String)
       raise ArgumentError unless arguments.all? { |arg| VALID_ARGUMENTS.include? arg }
 
       @name = name
@@ -31,7 +31,7 @@ module Holidays
 
     def self.from_proc(name, arguments, proc)
       args = arguments.split(',').map { |arg| arg.strip.to_sym }
-      CustomMethod.new(name, arguments, "", proc)
+      CustomMethod.new(name, args, "", proc)
     end
 
     # Call this method with the given inputs. `input_args` should be a hash which maps each input param name
