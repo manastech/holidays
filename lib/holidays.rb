@@ -101,7 +101,7 @@ module Holidays
     end
 
     def region_metadata(region_name)
-      repository.region_metadata[region_name]
+      repository.region_metadata[region_name.to_sym]
     end
 
     def repository
