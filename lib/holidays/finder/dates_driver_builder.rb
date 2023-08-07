@@ -54,6 +54,6 @@ module Holidays
 
         dates_driver
       end
-  end
+    end
   end
 end

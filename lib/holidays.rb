@@ -3,37 +3,28 @@ $:.unshift File.dirname(__FILE__)
 
 require 'date'
 require 'digest/md5'
-require 'holidays/factory/definition'
 require 'holidays/finder'
 require 'holidays/errors'
-require 'holidays/load_all_definitions'
-require 'holidays/definition/generator'
+require 'holidays/generator'
+require 'holidays/repository.rb'
+require 'holidays/cache_repository.rb'
 
 module Holidays
   WEEKS = {:first => 1, :second => 2, :third => 3, :fourth => 4, :fifth => 5, :last => -1, :second_last => -2, :third_last => -3}
   MONTH_LENGTHS = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
   DAY_SYMBOLS = Date::DAYNAMES.collect { |n| n.downcase.intern }
 
-  class Configuration
-    attr_accessor :definitions_path
-
-    def initialize
-      @definitions_path = "generated_definitions"
-    end
-
-    def full_definitions_path
-      @full_definitions_path || @definitions_path
-    end
-
-    def full_definitions_path=(path)
-      @full_definitions_path = path
-    end
-  end
-
   class << self
+    def initialize(files_to_parse)
+      Generator.parse_definition_files(files_to_parse).each do |definition|
+        repository.add_region_definition(definition)
+      end
 
-    def configuration
-      @configuration ||= Configuration.new
+      load_global_methods
+    end
+
+    def load_new_definition(definition_file)
+      repository.add_region_definition Generator.parse_definition_file(definition_file)
     end
 
     def any_holidays_during_work_week?(date, *options)
@@ -60,7 +51,7 @@ module Holidays
 
       raise ArgumentError if end_date < start_date
 
-      if cached_holidays = Factory::Definition.cache_repository.find(start_date, end_date, options)
+      if cached_holidays = cache.find(start_date, end_date, options)
         return cached_holidays
       end
 
@@ -101,45 +92,54 @@ module Holidays
       start_date, end_date = get_date(start_date), get_date(end_date)
       cache_data = between(start_date, end_date, *options)
 
-      Factory::Definition.cache_repository.cache_between(start_date, end_date, cache_data, options)
+      cache.cache_between(start_date, end_date, cache_data, options)
     end
 
     def available_regions
-      Holidays::REGIONS
+      repository.regions
     end
 
     def region_metadata(region_name)
-      return Holidays::REGION_METADATA_LOOKUP unless region_name.presence
-
-      Holidays::REGION_METADATA_LOOKUP[region_name.to_sym]
+      repository.region_metadata[region_name]
     end
 
-    def load_custom(*files)
-      regions, rules_by_month, custom_methods, _ = Factory::Definition.file_parser.parse_definition_files(files)
-
-      custom_methods.each do |method_key, method_entity|
-        custom_methods[method_key] = Factory::Definition.custom_method_proc_decorator.call(method_entity)
-      end
-
-      Factory::Definition.merger.call(regions, rules_by_month, custom_methods)
-
-      rules_by_month
+    def repository
+      @repository ||= Repository.new
     end
 
-    def load_all
-      path = Holidays.configuration.full_definitions_path + "/"
-
-      Dir.foreach(path) do |item|
-        next if item == '.' or item == '..'
-
-        target = path+item
-        next if File.extname(target) != '.rb'
-
-        require target
-      end
+    def cache
+      @cache_repository ||= CacheRepository.new
     end
-
+    
     private
+
+    def load_global_methods
+      #FIXME I need a better way to do this. I'm thinking of putting these 'common' methods
+      # into some kind of definition file so it can be loaded automatically but I'm afraid
+      # of making that big of a breaking API change since these are public. For the time
+      # being I'll load them manually like this.
+      #
+      # NOTE: These are no longer public! We can do whatever we want here!
+      global_methods = [
+        Holidays::CustomMethod.from_proc("easter", "year", Holidays::DateCalculator::Easter::Gregorian.method(:calculate_easter_for).to_proc),
+        Holidays::CustomMethod.from_proc("orthodox_easter", "year", Holidays::DateCalculator::Easter::Gregorian.method(:calculate_orthodox_easter_for).to_proc),
+        Holidays::CustomMethod.from_proc("orthodox_easter_julian", "year", Holidays::DateCalculator::Easter::Julian.method(:calculate_orthodox_easter_for).to_proc),
+        Holidays::CustomMethod.from_proc("to_monday_if_sunday", "date", Holidays::DateCalculator.method(:to_monday_if_sunday).to_proc),
+        Holidays::CustomMethod.from_proc("to_monday_if_weekend", "date", Holidays::DateCalculator.method(:to_monday_if_weekend).to_proc),
+        Holidays::CustomMethod.from_proc("to_weekday_if_boxing_weekend", "date", Holidays::DateCalculator.method(:to_weekday_if_boxing_weekend).to_proc),
+        Holidays::CustomMethod.from_proc("to_weekday_if_boxing_weekend_from_year", "year", Holidays::DateCalculator.method(:to_weekday_if_boxing_weekend_from_year).to_proc),
+        Holidays::CustomMethod.from_proc("to_weekday_if_weekend", "date", Holidays::DateCalculator.method(:to_weekday_if_weekend).to_proc),
+        Holidays::CustomMethod.from_proc("calculate_day_of_month", "year, month, day, wday", Holidays::DateCalculator.method(:day_of_month).to_proc),
+        Holidays::CustomMethod.from_proc("to_weekday_if_boxing_weekend_from_year_or_to_tuesday_if_monday", "year", Holidays::DateCalculator.method(:to_weekday_if_boxing_weekend_from_year_or_to_tuesday_if_monday).to_proc),
+        Holidays::CustomMethod.from_proc("to_tuesday_if_sunday_or_monday_if_saturday", "date", Holidays::DateCalculator.method(:to_tuesday_if_sunday_or_monday_if_saturday).to_proc),
+        Holidays::CustomMethod.from_proc("lunar_to_solar", "year, month, day, region", Holidays::DateCalculator.method(:to_solar).to_proc) ,
+      ]
+
+      global_methods.each do |method|
+        Holidays.repository.custom_methods[method.method_key] = method
+      end
+    end
+    
 
     def get_date(date)
       if date.respond_to?(:to_date)

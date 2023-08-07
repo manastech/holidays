@@ -8,7 +8,6 @@ module Holidays
     attr_accessor :observed
     attr_accessor :function
     attr_accessor :year_ranges
-    attr_accessor :function_arguments
     attr_accessor :function_modifier
     attr_accessor :regions
     
@@ -21,12 +20,11 @@ module Holidays
       @observed = rule[:observed]
       @function = rule[:function]
       @year_ranges = rule[:year_ranges]
-      @function_arguments = rule[:function_arguments]
       @regions = rule[:regions]
       @function_modifier = rule[:function_modifier]
     end
 
-    def self.from_yaml(rule_definition, parsed_custom_methods)
+    def self.from_yaml(rule_definition)
       rule = {}
 
       rule_definition.each do |key, val|
@@ -41,14 +39,10 @@ module Holidays
         rule[:year_ranges][:between] = Range.new(start_year, end_year)
       end
 
-      if rule[:function]
-        rule[:function_arguments] = get_function_arguments(rule[:function], parsed_custom_methods)
-      end
-
       HolidayRule.new(rule)
     end
 
-    def to_source(parsed_custom_methods)
+    def to_source
       string = '{'
       if mday
         string << ":mday => #{mday}, "
@@ -56,10 +50,6 @@ module Holidays
 
       if function
         string << ":function => \"#{function.to_s}\", "
-
-        # We need to add in the arguments so we can know what to send in when calling the custom proc during holiday lookups.
-        # NOTE: the allowed arguments are enforced in the custom methods parser.
-        string << ":function_arguments => #{HolidayRule.get_function_arguments(function, parsed_custom_methods)}, "
 
         if function_modifier
           string << ":function_modifier => #{function_modifier.to_s}, "
@@ -82,7 +72,6 @@ module Holidays
 
       if observed
         string << ":observed => \"#{observed.to_s}\", "
-        string << ":observed_arguments => #{HolidayRule.get_function_arguments(observed, parsed_custom_methods)}, "
       end
 
       if type
@@ -93,6 +82,12 @@ module Holidays
       string << ":name => \"#{name}\", :regions => [:" + regions.uniq.join(', :') + "]}"
     end
 
+    def informal?
+      type == :informal || type == 'informal'
+    end
+
+    # Compares two `HolidayRule`s for equality on every property _except_ the defined regions.
+    # We want to be able to easily tell if the same holiday is defined for multiple regions.
     def ==(other)
       other.name == name \
         and other.wday == wday \
@@ -100,23 +95,9 @@ module Holidays
         and other.week == week \
         and other.type == type \
         and other.function == function \
+        and other.function_modifier == function_modifier \
         and other.observed == observed \
         and other.year_ranges == year_ranges
-    end
-
-    private
-
-    # This method sucks. The issue here is that the custom methods repo has the 'general' methods (like easter)
-    # but the 'parsed_custom_methods' have the recently parsed stuff. We don't load those until they are needed later.
-    # This entire file is a refactor target so I am adding some tech debt to get me over the hump.
-    # What we should do is ensure that all custom methods are loaded into the repo as soon as they are parsed
-    # so we only have one place to look.
-    def self.get_function_arguments(function_id, parsed_custom_methods)
-      if method = Holidays::Factory::Definition.custom_methods_repository.find(function_id)
-        method.parameters.collect { |arg| arg[1] }
-      elsif method = parsed_custom_methods[function_id]
-        method.arguments.collect { |arg| arg.to_sym }
-      end
     end
   end
 end

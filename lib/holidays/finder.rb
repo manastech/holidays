@@ -1,6 +1,4 @@
 require 'holidays/finder/dates_driver_builder'
-require 'holidays/finder/parse_options'
-require 'holidays/definition/context/function_processor'
 
 module Holidays::Finder
   class << self
@@ -71,30 +69,31 @@ module Holidays::Finder
     private
 
     def search(dates_driver, regions, options)
+      informal_is_set = options&.include?(:informal) || false
+      observed_is_set = options&.include?(:observed) || false
+
       holidays = []
       dates_driver.each do |year, months|
         months.each do |month|
-          next unless hbm = Holidays::Factory::Definition.holidays_by_month_repository.find_by_month(month)
+          next unless hbm = Holidays.repository.get_holidays_for_month(month)
+
           hbm.each do |h|
-            is_informal_type = h[:type] && [:informal, 'informal'].include?(h[:type])
-            informal_is_set = options && options.include?(:informal) == true
-            observed_is_set = options && options.include?(:observed) == true
 
-            next if is_informal_type && !informal_is_set
-            next unless holiday_in_region(regions, h[:regions])
+            next if h.informal? && !informal_is_set
+            next unless holiday_in_region(regions, h.regions)
 
-            if h[:year_ranges]
-              next unless holiday_in_year_range(year, h[:year_ranges])
+            if h.year_ranges
+              next unless holiday_in_year_range(year, h.year_ranges)
             end
 
             date = build_date(year, month, h)
             next unless date
 
-            if observed_is_set && h[:observed]
+            if observed_is_set && h.observed
               date = build_observed_date(date, regions, h)
             end
 
-            holidays << {:date => date, :name => h[:name], :regions => h[:regions]}
+            holidays << {:date => date, :name => h.name, :regions => h.regions}
           end
         end
       end
@@ -105,23 +104,9 @@ module Holidays::Finder
     def holiday_in_region(requested, available)
       return true if requested.include?(:any)
 
-      # When an underscore is encountered, derive the parent regions
-      # symbol and check for both.
-      requested = requested.collect do |r|
-        if r.to_s =~ /_/
-          chunks = r.to_s.split('_')
-
-          chunks.length.downto(1).map do |num|
-            chunks[0..-num].join('_').to_sym
-          end
-        else
-          r
-        end
+      available.any? do |a| 
+        requested.any? { |r| r.to_s.start_with?(a.to_s) }
       end
-
-      requested = requested.flatten.uniq
-
-      available.any? { |avail| requested.include?(avail) }
     end
     
     def holiday_in_year_range(target_year, year_range_defs)
@@ -157,16 +142,15 @@ module Holidays::Finder
       matched
     end
 
-
     def build_date(year, month, h)
-      if h[:function]
+      if h.function
         holiday = custom_holiday(year, month, h)
         #FIXME The result should always be present, see https://github.com/holidays/holidays/issues/204 for more information
         current_month = holiday&.month
         current_day = holiday&.mday
       else
         current_month = month
-        current_day = h[:mday] || Holidays::DateCalculator.day_of_month(year, month, h[:week], h[:wday])
+        current_day = h.mday || Holidays::DateCalculator.day_of_month(year, month, h.week, h.wday)
       end
 
       # Silently skip bad mdays
@@ -175,17 +159,16 @@ module Holidays::Finder
     end
 
     def custom_holiday(year, month, h)
-      Holidays::FunctionProcessor.process_function(
-        build_custom_method_input(year, month, h[:mday], h[:regions]),
-        h[:function], h[:function_arguments], h[:function_modifier],
+      process_function(
+        build_custom_method_input(year, month, h.mday, h.regions),
+        h.function, h.function_modifier,
       )
     end
 
     def build_observed_date(date, regions, h)
-      Holidays::FunctionProcessor.process_function(
+      process_function(
         build_custom_method_input(date.year, date.month, date.day, regions),
-        h[:observed],
-        [:date],
+        h.observed,
       )
     end
 
@@ -196,6 +179,65 @@ module Holidays::Finder
         day: day,
         region: regions.first, #FIXME This isn't ideal but will work for our current use case...
       }
+    end
+
+    def process_function(input, func_id, func_modifier = nil)
+      raise ArgumentError if input.nil? || input.empty?
+
+      input.each_key do |name|
+        raise ArgumentError unless Holidays::CustomMethod::VALID_ARGUMENTS.include?(name)
+      end
+
+      raise ArgumentError if input.has_key?(:year) && !input[:year].is_a?(Integer)
+      raise ArgumentError if input.has_key?(:month) && (input[:month] < 0 || input[:month] > 12)
+      raise ArgumentError if input.has_key?(:day) && (input[:day] < 1 || input[:day] > 31)
+      raise ArgumentError if input.has_key?(:region) && !input[:region].is_a?(Symbol)
+
+      function = Holidays.repository.custom_methods[func_id]
+      raise Holidays::FunctionNotFound.new("Unable to find function with id '#{func_id}'") if function.nil?
+
+      result = function.call(input)
+      if result.kind_of?(Date)
+        # NOTE: This could be a positive OR negative number.
+        result += func_modifier if func_modifier
+      elsif result.is_a?(Integer)
+        begin
+          result = Date.civil(input[:year], input[:month], result)
+        rescue ArgumentError
+          raise Holidays::InvalidFunctionResponse.new("invalid day response from custom method call resulting in invalid date. Result: '#{result}'")
+        end
+      elsif result.nil?
+        # Do nothing. This is because some functions can return 'nil' today.
+        # I want to change this and so rather than come up with a clean
+        # implementation I'll do this so we don't throw an error in this specific
+        # situation. This should be removed once we have changed the existing
+        # custom definition functions. See https://github.com/holidays/holidays/issues/204
+      else
+        raise Holidays::InvalidFunctionResponse.new("invalid response from custom method call, must be a 'date' or 'integer' representing the day. Result: '#{result}'")
+      end
+
+      result
+    end
+
+    # Returns [(arr)regions, (bool)observed, (bool)informal]
+    def parse_options(*options)
+      options.flatten!
+
+      #TODO This is garbage. These two deletes MUST come before the
+      # parse_regions call, otherwise it thinks that :observed and :informal
+      # are regions to parse. We should be splitting these things out.
+
+      opts = []
+      opts << :observed if options.delete(:observed)
+      opts << :informal if options.delete(:informal)
+
+      if options.empty? || options.include?(:any)
+        regions = Holidays.repository.regions
+      else
+        regions = options.flat_map { |region| Holidays.repository.lookup_region(region.to_sym) }.uniq
+      end
+
+      return regions, opts
     end
   end
 end

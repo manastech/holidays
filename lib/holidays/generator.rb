@@ -18,15 +18,14 @@ module Holidays::Generator
       raise ArgumentError, "Must have at least one file to parse" if files.nil? || files.empty?
 
       files.flatten!
-      files.map do |file|
-        begin
-          definition_file = YAML.load_file(file)
+      files.map { |file| parse_definition_file(file) }
+    end
 
-          Holidays::RegionDefinition.from_yaml(definition_file)
-        rescue ArgumentError => error
-          raise ArgumentError.new("Failed to parse #{file}: #{error.message}")
-        end
-      end
+    def parse_definition_file(file)
+      definition_file = YAML.load_file(file)
+      Holidays::RegionDefinition.from_yaml(definition_file)
+    rescue ArgumentError => error
+      raise ArgumentError.new("Failed to parse #{file}: #{error.message}")
     end
 
     # Generate module source code and test source code for a `RegionModule`. The module source code is particularly

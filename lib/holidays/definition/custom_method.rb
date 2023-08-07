@@ -2,7 +2,7 @@ module Holidays
   # `CustomMethod`s allow definition writers to write custom Ruby code that modifies the date of a holiday,
   # based on the initial date and/or holiday region.
   class CustomMethod
-    VALID_ARGUMENTS = ["date", "year", "month", "day", "region"]
+    VALID_ARGUMENTS = [:date, :year, :month, :day, :region]
 
     attr_accessor :name
     attr_accessor :arguments 
@@ -16,15 +16,52 @@ module Holidays
       @name = name
       @arguments = arguments
       @source = source
+      @result_cache = {}
+    end
+
+    def initialize(name, arguments, source, proc)
+      raise ArgumentError if name.nil? || name.empty? || !name.is_a?(String)
+      raise ArgumentError if source.nil? || source.empty? || !source.is_a?(String)
+      raise ArgumentError unless arguments.all? { |arg| VALID_ARGUMENTS.include? arg }
+
+      @name = name
+      @arguments = arguments
+      @source = source
+      @proc = proc
+      @result_cache = {}
     end
 
     # Initialize a new `CustomMethod` from a YAML object. The name of the method is not
     # expected on the YAML object properties, it should be provided separately. In most circumstances,
     # this name should come from the key used when defining the method in the definition file.
     def self.from_yaml(name, definition)
-      arguments = definition["arguments"].split(",").map(&:strip)
+      arguments = definition["arguments"].split(",").map { |arg| arg.strip.to_sym }
       
       CustomMethod.new(name, arguments, definition["ruby"])      
+    end
+
+    def self.from_proc(name, arguments, proc)
+      args = arguments.split(',').map { |arg| arg.strip.to_sym }
+      CustomMethod.new(name, arguments, "", proc)
+    end
+
+    # Call this method with the given inputs. `input_args` should be a hash which maps each input param name
+    # (i.e., `:year`) to a value.
+    #
+    # Calls will be cached to avoid extra computation for the same dates.
+    def call(input_args)
+      args_list = []
+      arguments.each do |arg|
+        if arg == :date
+          args_list << Date.civil(input[:year], input[:month], input[:day])
+        elsif input = input_args[arg]
+          args_list << input
+        end
+      end
+
+      cache_key = Digest::MD5.hexdigest("#{args_list.join('_')}")
+      @result_cache[cache_key] = to_proc.call(*args_list) unless @result_cache[cache_key]
+      @result_cache[cache_key]      
     end
 
     # Serialize this custom method into Ruby code that can be loaded later.
@@ -34,9 +71,7 @@ module Holidays
 
     # Return a new Proc instance based on the arguments & source code of this custom method.
     def to_proc
-      eval("Proc.new { |#{args_string}|
-           #{source}
-      }")
+      @proc ||= eval("Proc.new { |#{args_string}| #{source} }")
     end
 
     def method_key

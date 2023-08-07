@@ -1,0 +1,72 @@
+
+module Holidays
+  # This class will hold all of the holiday definitions, custom methods, and region info
+  class Repository
+    attr_reader :regions
+    attr_reader :region_metadata
+    attr_accessor :custom_methods
+    
+    def initialize
+      @holidays_by_month = Hash.new { |hash, key| hash[key] = [] }
+      @custom_methods = {}
+      @regions = []
+      @region_metadata = {}
+    end
+
+    def add_region_definition(definition)
+      return if @regions.include?(definition.region)
+
+      @regions << definition.region
+      @region_metadata[definition.region] = definition.metadata
+
+      definition.month_rules.each do |month, rules|
+        holidays_to_add = []
+        @holidays_by_month[month].each do |holiday|
+          rules.each do |rule|
+            if holiday == rule
+              holiday.regions << definition.region
+            else
+              holidays_to_add << rule
+            end
+          end
+        end
+
+        @holidays_by_month[month] += holidays_to_add
+      end
+
+      @custom_methods.merge! definition.custom_methods
+    end
+
+    def get_holidays_for_month(month)
+      @holidays_by_month[month]
+    end
+
+    # Returns an array of regions. If `region` is a "concrete" region name (i.e., not a wildcard) and the region
+    # exists in the `regions` array, then `region` will be returned as a single-item array. If `region` is a 
+    # wildcard, then all matching regions will be returned in an array. If `region` is a concrete name or wildcard
+    # with no corresponding item in `regions`, then an empty array will be returned.
+    def lookup_region(region)
+      return [] if region.nil?
+
+      if region.to_s.ends_with?('_')
+        parent_region = region.to_s.split('_').first
+        return regions.select { |r| r.to_s.start_with?(parent_region) }
+      elsif regions.include?(region)
+        return [region]
+      else 
+        return []
+      end
+    end
+
+    def includes_region?(region)
+      if region.to_s.ends_with?('_')
+        parent_region = region.to_s.split('_').first
+        # The region is a wildcard, which means we should return true if any subregion is present
+        @regions.any? { |r| r.to_s.start_with?(parent_region) }
+      else
+        # This region is not a wildcard, so we just do an exact match
+        @regions.include?(region)
+      end
+    end
+  end
+end
