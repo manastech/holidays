@@ -17,7 +17,6 @@ module Holidays
       # TODO: Right now we're adding the region to each rule individually, since the rule will need to access it in the generated source code.
       # We could either do this now, or we could do it later while we're actually generating the source code. I'm choosing to do it here
       # because it seems like more of a validation/initialization issue.
-      puts "Metadata region: #{metadata.region}"
       month_rules.values.each do |rules|
         rules.each do |rule|
           if rule.regions.nil?

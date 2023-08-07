@@ -72,8 +72,6 @@ module Holidays::Finder
       informal_is_set = options&.include?(:informal) || false
       observed_is_set = options&.include?(:observed) || false
 
-      puts "Getting holidays for #{regions}"
-
       holidays = []
       dates_driver.each do |year, months|
         months.each do |month|
