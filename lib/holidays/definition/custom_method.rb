@@ -2,7 +2,7 @@ module Holidays
   # `CustomMethod`s allow definition writers to write custom Ruby code that modifies the date of a holiday,
   # based on the initial date and/or holiday region.
   class CustomMethod
-    VALID_ARGUMENTS = [:date, :year, :month, :day, :region]
+    VALID_ARGUMENTS = [:date, :year, :month, :day, :wday, :region]
 
     attr_accessor :name
     attr_accessor :arguments 
