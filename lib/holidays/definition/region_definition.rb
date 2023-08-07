@@ -48,7 +48,7 @@ module Holidays
 
       rules_by_month = {}
       definition["months"].each do |month, rule_definitions|
-        rules_by_month[month] = rule_definitions.map { |rule| Holidays::HolidayRule.from_yaml(rule, custom_methods) }
+        rules_by_month[month] = rule_definitions.map { |rule| Holidays::HolidayRule.from_yaml(rule) }
       end
 
       tests = definition["tests"]&.map { |t| Holidays::Test.from_yaml(t) }   
