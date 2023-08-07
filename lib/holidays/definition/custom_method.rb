@@ -44,7 +44,7 @@ module Holidays
       # the input list.
       arguments.each do |arg|
         if arg == :date
-          args_list << Date.civil(input[:year], input[:month], input[:day])
+          args_list << Date.civil(input_args[:year], input_args[:month], input_args[:day])
         elsif input = input_args[arg]
           args_list << input
         else

@@ -6,7 +6,7 @@ module Holidays::Finder
       raise ArgumentError unless start_date
       raise ArgumentError unless end_date
 
-      regions, opts = Holidays::Finder.parse_options(options)
+      regions, opts = parse_options(options)
       dates_driver = Holidays::Finder.dates_driver_builder(start_date, end_date)
 
       search(dates_driver, regions, opts)
@@ -19,7 +19,7 @@ module Holidays::Finder
       raise ArgumentError if holidays_count <= 0
       raise ArgumentError unless from_date
 
-      regions, opts = Holidays::Finder.parse_options(options)
+      regions, opts = parse_options(options)
 
       holidays = []
 
@@ -44,7 +44,7 @@ module Holidays::Finder
     def year_holiday(from_date, options)
       raise ArgumentError unless from_date && from_date.is_a?(Date)
 
-      regions, opts = Holidays::Finder.parse_options(options)
+      regions, opts = parse_options(options)
 
       # This could be smarter but I don't have any evidence that just checking for
       # the next 12 months will cause us issues. If it does we can implement something
@@ -71,6 +71,8 @@ module Holidays::Finder
     def search(dates_driver, regions, options)
       informal_is_set = options&.include?(:informal) || false
       observed_is_set = options&.include?(:observed) || false
+
+      puts "Getting holidays for #{regions}"
 
       holidays = []
       dates_driver.each do |year, months|
@@ -188,10 +190,10 @@ module Holidays::Finder
         raise ArgumentError unless Holidays::CustomMethod::VALID_ARGUMENTS.include?(name)
       end
 
-      raise ArgumentError if input.has_key?(:year) && !input[:year].is_a?(Integer)
-      raise ArgumentError if input.has_key?(:month) && (input[:month] < 0 || input[:month] > 12)
-      raise ArgumentError if input.has_key?(:day) && (input[:day] < 1 || input[:day] > 31)
-      raise ArgumentError if input.has_key?(:region) && !input[:region].is_a?(Symbol)
+      raise ArgumentError if input[:year] && !input[:year].is_a?(Integer)
+      raise ArgumentError if input[:month] && (input[:month] < 0 || input[:month] > 12)
+      raise ArgumentError if input[:day] && (input[:day] < 1 || input[:day] > 31)
+      raise ArgumentError if input[:region] && !input[:region].is_a?(Symbol)
 
       function = Holidays.repository.custom_methods[func_id]
       raise Holidays::FunctionNotFound.new("Unable to find function with id '#{func_id}'") if function.nil?

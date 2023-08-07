@@ -17,6 +17,14 @@ module Holidays
       )
     end
 
+    def [](key)
+      if key == :name
+        name
+      elsif key == :region
+        region
+      end
+    end
+
     def to_h
       { name: name, region: region }
     end

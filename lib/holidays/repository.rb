@@ -7,7 +7,7 @@ module Holidays
     attr_accessor :custom_methods
     
     def initialize
-      @holidays_by_month = Hash.new { |hash, key| hash[key] = [] }
+      @holidays_by_month = {}
       @custom_methods = {}
       @regions = []
       @region_metadata = {}
@@ -20,18 +20,19 @@ module Holidays
       @region_metadata[definition.region] = definition.metadata
 
       definition.month_rules.each do |month, rules|
-        holidays_to_add = []
-        @holidays_by_month[month].each do |holiday|
-          rules.each do |rule|
+        @holidays_by_month[month] = [] unless @holidays_by_month[month]
+
+        rules.each do |rule|
+          exists = false
+          @holidays_by_month[month].each do |holiday|
             if holiday == rule
-              holiday.regions << definition.region
-            else
-              holidays_to_add << rule
+              holiday.add_region definition.region
+              exists = true
             end
           end
-        end
 
-        @holidays_by_month[month] += holidays_to_add
+          @holidays_by_month[month] << rule unless exists
+        end
       end
 
       @custom_methods.merge! definition.custom_methods

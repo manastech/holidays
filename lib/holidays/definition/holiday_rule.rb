@@ -1,5 +1,7 @@
 module Holidays
   class HolidayRule
+    alias_method :eql?, :==
+    
     attr_accessor :name
     attr_accessor :wday
     attr_accessor :mday
@@ -86,18 +88,25 @@ module Holidays
       type == :informal || type == 'informal'
     end
 
+    def add_region(region)
+      @regions << region
+      @regions.uniq!
+    end
+
     # Compares two `HolidayRule`s for equality on every property _except_ the defined regions.
     # We want to be able to easily tell if the same holiday is defined for multiple regions.
     def ==(other)
-      other.name == name \
-        and other.wday == wday \
-        and other.mday == mday \
-        and other.week == week \
-        and other.type == type \
-        and other.function == function \
-        and other.function_modifier == function_modifier \
-        and other.observed == observed \
-        and other.year_ranges == year_ranges
+      other.class == self.class && other.state == state
+    end
+
+    def hash
+      state.hash
+    end
+
+    protected
+
+    def state
+      [@name, @wday, @mday, @week, @type, @function, @function_modifier, @observed, @year_ranges]
     end
   end
 end
