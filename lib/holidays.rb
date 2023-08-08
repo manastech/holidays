@@ -20,8 +20,8 @@ module Holidays
     # add more definitions later with `load_new_definition` - but you still won't have the global custom methods
     # like `easter(year)` available.
     def init_data(files_to_parse)
-      Parser.parse_definition_files(files_to_parse).each do |definition|
-        repository.add_region_definition(definition)
+      files_to_parse.each do |filename|
+        load_new_definition(filename)
       end
 
       load_global_methods
@@ -30,7 +30,9 @@ module Holidays
     def load_new_definition(definition)
       if definition.is_a? String
         # If it's a string, expect it be be a file path to a parseable region definition
-        repository.add_region_definition Parser.parse_definition(definition)
+        region_definition = Parser.parse_definition_file(definition)
+        region_definition.metadata[:filename] = definition
+        repository.add_region_definition(region_definition)
       elsif definition.is_a? Holidays::RegionDefinition
         # If the user passes in their own RegionDefinition, then just add it directly
         repository.add_region_definition definition
