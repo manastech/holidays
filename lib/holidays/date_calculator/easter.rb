@@ -2,7 +2,7 @@ module Holidays
   module DateCalculator
     module Easter
       class Gregorian
-        def calculate_easter_for(year)
+        def self.calculate_easter_for(year)
           y = year
           a = y % 19
           b = y / 100
@@ -23,7 +23,7 @@ module Holidays
           Date.civil(year, month, day)
         end
 
-        def calculate_orthodox_easter_for(year)
+        def self.calculate_orthodox_easter_for(year)
           j_date = Julian.new.calculate_orthodox_easter_for(year)
 
           case
@@ -47,7 +47,7 @@ module Holidays
       class Julian
         # Copied from https://github.com/Loyolny/when_easter
         # Graciously allowed by Michał Nierebiński (https://github.com/Loyolny)
-        def calculate_easter_for(year)
+        def self.calculate_easter_for(year)
           g = year % 19 + 1
           s = (year - 1600) / 100 - (year - 1600) / 400
           l = (((year - 1400) / 100) * 8) / 25
@@ -75,7 +75,7 @@ module Holidays
           end
         end
 
-        def calculate_orthodox_easter_for(year)
+        def self.calculate_orthodox_easter_for(year)
           y = year
           g = y % 19
           i = (19 * g + 15) % 30

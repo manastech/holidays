@@ -1,8 +1,8 @@
-module Holidays
-  module DateCalculator
+module Holidays::DateCalculator
+  module Lunar
     # Copied from https://github.com/sunsidew/ruby_lunardate
     # Graciously allowed by JeeWoong Yang (https://github.com/sunsidew)
-    class LunarDate
+    class << self
       attr_accessor :year, :month, :day
 
       def to_solar(year, month, day, region)
