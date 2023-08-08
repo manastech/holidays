@@ -16,6 +16,9 @@ module Holidays
   DAY_SYMBOLS = Date::DAYNAMES.collect { |n| n.downcase.intern }
 
   class << self
+    # This needs to be called in order to seed the holidays repository with data. If you don't call this, then you can
+    # add more definitions later with `load_new_definition` - but you still won't have the global custom methods
+    # like `easter(year)` available.
     def init_data(files_to_parse)
       Parser.parse_definition_files(files_to_parse).each do |definition|
         repository.add_region_definition(definition)
@@ -24,8 +27,16 @@ module Holidays
       load_global_methods
     end
 
-    def load_new_definition(definition_file)
-      repository.add_region_definition Parser.parse_definition_file(definition_file)
+    def load_new_definition(definition)
+      if definition.is_a? String
+        # If it's a string, expect it be be a file path to a parseable region definition
+        repository.add_region_definition Parser.parse_definition(definition)
+      elsif definition.is_a? Holidays::RegionDefinition
+        # If the user passes in their own RegionDefinition, then just add it directly
+        repository.add_region_definition definition
+      else
+        raise ArgumentError, "load_new_definition expects a file path or a pre-loaded RegionDefinition"
+      end
     end
 
     def any_holidays_during_work_week?(date, *options)

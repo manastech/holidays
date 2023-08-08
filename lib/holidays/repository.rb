@@ -1,6 +1,8 @@
 
 module Holidays
-  # This class will hold all of the holiday definitions, custom methods, and region info
+  # This class holds all of the holiday definitions, custom methods, and region info that have been loaded
+  # into the "runtime" of the library. When holidays are being queried, the data will come from this
+  # class.
   class Repository
     attr_reader :regions
     attr_reader :region_metadata
@@ -59,6 +61,8 @@ module Holidays
       end
     end
 
+    # Return `true` if the input region has been loaded. If the input region is a wildcard (ends with '_'),
+    # then any child region will count.
     def includes_region?(region)
       if region.to_s.ends_with?('_')
         parent_region = region.to_s.split('_').first
