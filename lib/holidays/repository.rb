@@ -40,6 +40,27 @@ module Holidays
       @custom_methods.merge! definition.custom_methods
     end
 
+    def delete_region!(region)
+      region = region.to_sym
+      return unless @regions.include?(region)
+
+      @regions.delete!(region)
+      @region_metadata.delete!(region)
+
+      @holidays_by_month.each do |month, holidays|
+        holidays_to_remove = []
+        holidays.each do |holiday|
+          if holiday.regions.include?(region)
+            holiday.regions.delete!(region)
+          end
+
+          holidays_to_remove << holiday if holiday.regions.empty?
+        end
+
+        @holidays_by_month[month] = holidays - holidays_to_remove
+      end
+    end
+
     def get_holidays_for_month(month)
       @holidays_by_month[month]
     end
