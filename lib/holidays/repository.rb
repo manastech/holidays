@@ -44,16 +44,13 @@ module Holidays
       region = region.to_sym
       return unless @regions.include?(region)
 
-      @regions.delete!(region)
-      @region_metadata.delete!(region)
+      @regions.delete(region)
+      @region_metadata.delete(region)
 
       @holidays_by_month.each do |month, holidays|
         holidays_to_remove = []
         holidays.each do |holiday|
-          if holiday.regions.include?(region)
-            holiday.regions.delete!(region)
-          end
-
+          holiday.regions.delete(region)
           holidays_to_remove << holiday if holiday.regions.empty?
         end
 
