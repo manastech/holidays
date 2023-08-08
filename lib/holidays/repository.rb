@@ -51,7 +51,7 @@ module Holidays
     def lookup_region(region)
       return [] if region.nil?
 
-      if region.to_s.ends_with?('_')
+      if region.to_s.ends_with?('_') && !only_exact
         parent_region = region.to_s.split('_').first
         return regions.select { |r| r.to_s.start_with?(parent_region) }
       elsif regions.include?(region)
@@ -64,7 +64,7 @@ module Holidays
     # Return `true` if the input region has been loaded. If the input region is a wildcard (ends with '_'),
     # then any child region will count.
     def includes_region?(region)
-      if region.to_s.ends_with?('_')
+      if region.to_s.ends_with?('_') && !only_exact
         parent_region = region.to_s.split('_').first
         # The region is a wildcard, which means we should return true if any subregion is present
         @regions.any? { |r| r.to_s.start_with?(parent_region) }
