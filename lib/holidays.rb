@@ -114,6 +114,9 @@ module Holidays
     end
 
     def region_metadata(region_name)
+      repository.region_metadata.each do |key, meta|
+        puts "#{key}: #{meta.to_h}"
+      end
       repository.region_metadata[region_name.to_sym]
     end
 

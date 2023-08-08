@@ -1,11 +1,8 @@
 module Holidays
   class Metadata
-    def initialize(name, region, description)
-      @data = { 
-        name: name, 
-        region: region,
-        description: description,
-      }
+    def initialize(input)
+      @data = input.transform_keys { |key| key.to_sym }
+      puts @data
     end
 
     # Load metadata from the definition YAML file. `name` and `region` are required parameters. This also checks for a
@@ -14,11 +11,7 @@ module Holidays
       raise ArgumentError, "Expected name to be defined in metadata block" unless metadata_def['name']
       raise ArgumentError, "Expected region to be defined in metadata block" unless metadata_def['region']
 
-      Metadata.new(
-        metadata_def['name'],
-        metadata_def['region'].to_sym,
-        metadata_def['description'],
-      )
+      Metadata.new(metadata_def)
     end
 
     def [](key)
@@ -34,6 +27,7 @@ module Holidays
     end
 
     def region
+      puts "Region: #{@data[:region]}"
       @data[:region]
     end
 
