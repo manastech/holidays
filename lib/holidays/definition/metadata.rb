@@ -2,7 +2,7 @@ module Holidays
   class Metadata
     def initialize(input)
       @data = input.transform_keys { |key| key.to_sym }
-      puts @data
+      @data[:region] = @data[:region].to_sym
     end
 
     # Load metadata from the definition YAML file. `name` and `region` are required parameters. This also checks for a
@@ -27,7 +27,6 @@ module Holidays
     end
 
     def region
-      puts "Region: #{@data[:region]}"
       @data[:region]
     end
 
