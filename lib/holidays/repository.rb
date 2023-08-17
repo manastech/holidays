@@ -72,7 +72,7 @@ class Holidays::Repository
     end
 
     new_definitions = definitions.reject do |definition|
-      region_metadata.values.any? { |metadata] metadata[:filename] == definition }
+      region_metadata.values.any? { |metadata| metadata[:filename] == definition }
     end
 
     stale_regions.each { |r| delete_region!(r) }
