@@ -9,6 +9,7 @@ require 'holidays/parser'
 require 'holidays/repository'
 require 'holidays/cache_repository'
 require 'holidays/date_calculator'
+require 'holidays/global_configuration'
 
 module Holidays
   WEEKS = {:first => 1, :second => 2, :third => 3, :fourth => 4, :fifth => 5, :last => -1, :second_last => -2, :third_last => -3}
@@ -16,13 +17,13 @@ module Holidays
   DAY_SYMBOLS = Date::DAYNAMES.collect { |n| n.downcase.intern }
 
   class << self
+    attr_reader :repository
     # This needs to be called in order to seed the holidays repository with data. If you don't call this, then you can
     # add more definitions later with `load_new_definition` - but you still won't have the global custom methods
     # like `easter(year)` available.
-    def init_data(files_to_parse)
-      files_to_parse.each do |filename|
-        load_new_definition(filename)
-      end
+    def init_data(search_prefix)
+      @repository = Repository.new(search_prefix)
+      @repository.sync!
 
       load_global_methods
     end
@@ -31,7 +32,6 @@ module Holidays
       if definition.is_a? String
         # If it's a string, expect it be be a file path to a parseable region definition
         region_definition = Parser.parse_definition_file(definition)
-        region_definition.metadata[:filename] = definition
         repository.add_region_definition(region_definition)
       elsif definition.is_a? Holidays::RegionDefinition
         # If the user passes in their own RegionDefinition, then just add it directly
@@ -42,6 +42,7 @@ module Holidays
     end
 
     def any_holidays_during_work_week?(date, *options)
+      @repository.sync!
       monday = date - (date.wday - 1)
       friday = date + (5 - date.wday)
 
@@ -56,6 +57,7 @@ module Holidays
 
     def between(start_date, end_date, *options)
       raise ArgumentError unless start_date && end_date
+      @repository.sync!
 
       # remove the timezone
       start_date = start_date.new_offset(0) + start_date.offset if start_date.respond_to?(:new_offset)
@@ -69,7 +71,7 @@ module Holidays
         return cached_holidays
       end
 
-      Holidays::Finder.between(start_date, end_date, options)
+      Finder.between(start_date, end_date, options)
     end
 
     #FIXME All other methods start with a date and require a date. For the next
@@ -80,12 +82,14 @@ module Holidays
       raise ArgumentError if options.empty?
       raise ArgumentError unless options.is_a?(Array)
 
+      @repository.sync!
+
       # remove the timezone
       from_date = from_date.new_offset(0) + from_date.offset if from_date.respond_to?(:new_offset)
 
       from_date = get_date(from_date)
 
-      Holidays::Finder.next_holiday(holidays_count, from_date, options)
+      Finder.next_holiday(holidays_count, from_date, options)
     end
 
     #FIXME All other methods start with a date and require a date. For the next
@@ -95,11 +99,13 @@ module Holidays
       raise ArgumentError if options.empty?
       raise ArgumentError unless options.is_a?(Array)
 
+      @repository.sync!
+
       # remove the timezone
       from_date = from_date.new_offset(0) + from_date.offset if from_date.respond_to?(:new_offset)
       from_date = get_date(from_date)
 
-      Holidays::Finder.year_holiday(from_date, options)
+      Finder.year_holiday(from_date, options)
     end
 
     def cache_between(start_date, end_date, *options)
@@ -110,15 +116,12 @@ module Holidays
     end
 
     def available_regions
+      @repository.sync!
       repository.regions
     end
 
     def region_metadata(region_name)
       repository.region_metadata[region_name.to_sym]
-    end
-
-    def repository
-      @repository ||= Repository.new
     end
 
     def cache

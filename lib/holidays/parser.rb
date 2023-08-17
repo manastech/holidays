@@ -8,7 +8,10 @@ module Holidays::Parser
     # Load a region definition file into a `RegionDefinition` instance.
     def parse_definition_file(file)
       definition_file = YAML.load_file(file)
-      Holidays::RegionDefinition.from_yaml(definition_file)
+      region_definition = Holidays::RegionDefinition.from_yaml(definition_file)
+      region_definition.metadata[:filename] = file
+
+      region_definition
     rescue ArgumentError => error
       raise ArgumentError.new("Failed to parse #{file}: #{error.message}")
     end
