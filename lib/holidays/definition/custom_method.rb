@@ -57,11 +57,6 @@ module Holidays
       @result_cache[cache_key]      
     end
 
-    # Serialize this custom method into Ruby code that can be loaded later.
-    def to_source
-      "\"#{name}(#{args_string})\" => Proc.new { |#{args_string}|\n#{source}}"
-    end
-
     # Return a new Proc instance based on the arguments & source code of this custom method.
     def to_proc
       @proc ||= eval("Proc.new { |#{args_string}| #{source} }")
@@ -74,7 +69,6 @@ module Holidays
     def args_string
       arguments.join(", ")[0..-1]
     end
-
   end
 end
 

@@ -48,28 +48,6 @@ module Holidays
       )
     end
 
-    def to_source
-      src = ""
-
-      dates.each do |d|
-        date = "Date.civil(#{d.year}, #{d.month}, #{d.day})"
-
-        holiday_call = "Holidays.on(#{date}, #{regions}"
-
-        if options
-          holiday_call += ", #{options.map(&:to_sym)}"
-        end
-
-        if holiday?
-          src += "assert_equal \"#{name}\", (#{holiday_call})[0] || {})[:name]\n"
-        else
-          src += "assert_nil (#{holiday_call})[0] || {})[:name]\n"
-        end
-      end
-
-      src
-    end
-
     def holiday?
       @is_holiday
     end

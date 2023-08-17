@@ -44,46 +44,6 @@ module Holidays
       HolidayRule.new(rule)
     end
 
-    def to_source
-      string = '{'
-      if mday
-        string << ":mday => #{mday}, "
-      end
-
-      if function
-        string << ":function => \"#{function.to_s}\", "
-
-        if function_modifier
-          string << ":function_modifier => #{function_modifier.to_s}, "
-        end
-      end
-
-      # This is the 'else'. It is possible for mday AND function
-      # to be set but this is the fallback. This whole area
-      # needs to be reworked!
-      if string == '{'
-        string << ":wday => #{wday}, :week => #{week}, "
-      end
-
-      if year_ranges && year_ranges.is_a?(Hash)
-        selector = year_ranges.keys.first
-        value = year_ranges[selector]
-
-        string << ":year_ranges => { :#{selector} => #{value} },"
-      end
-
-      if observed
-        string << ":observed => \"#{observed.to_s}\", "
-      end
-
-      if type
-        string << ":type => :#{type}, "
-      end
-
-      # shouldn't allow the same region twice
-      string << ":name => \"#{name}\", :regions => [:" + regions.uniq.join(', :') + "]}"
-    end
-
     def informal?
       type == :informal || type == 'informal'
     end
