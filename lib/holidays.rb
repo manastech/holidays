@@ -9,7 +9,6 @@ require 'holidays/parser'
 require 'holidays/repository'
 require 'holidays/cache_repository'
 require 'holidays/date_calculator'
-require 'holidays/global_configuration'
 
 module Holidays
   WEEKS = {:first => 1, :second => 2, :third => 3, :fourth => 4, :fifth => 5, :last => -1, :second_last => -2, :third_last => -3}
