@@ -77,7 +77,7 @@ class Holidays::Repository
 
     stale_regions.each { |r| delete_region!(r) }
     new_definitions.each do |definition|
-      region_def = Parser.parse_definition_file(definition)
+      region_def = Holidays::Parser.parse_definition_file(definition)
       add_or_replace_definition(region_def)
     end
 
