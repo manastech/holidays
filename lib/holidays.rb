@@ -28,16 +28,9 @@ module Holidays
     end
 
     def load_new_definition(definition)
-      if definition.is_a? String
-        # If it's a string, expect it be be a file path to a parseable region definition
-        region_definition = Parser.parse_definition_file(definition)
-        repository.add_region_definition(region_definition)
-      elsif definition.is_a? Holidays::RegionDefinition
-        # If the user passes in their own RegionDefinition, then just add it directly
-        repository.add_region_definition definition
-      else
-        raise ArgumentError, "load_new_definition expects a file path or a pre-loaded RegionDefinition"
-      end
+      raise ArgumentError, "load_new_definition expects a RegionDefinition" unless definition.is_a?(RegionDefinition)
+
+      repository.add_region_definition definition
     end
 
     def any_holidays_during_work_week?(date, *options)
