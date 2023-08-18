@@ -19,11 +19,11 @@ class Holidays::Repository
 
   def add_region_definition(definition)
     return if @regions.include?(definition.region)
-    add_or_replace_region_definition(definition)      
+    add_or_replace_region_definition(definition, true)
   end
 
-  def add_or_replace_region_definition(definition)
-    @regions << definition.region
+  def add_or_replace_region_definition(definition, region_exists = false)
+    @regions << definition.region unless region_exists or @regions.include?(definition.region)
     @region_metadata[definition.region] = definition.metadata
 
     definition.month_rules.each do |month, rules|
