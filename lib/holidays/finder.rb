@@ -93,7 +93,7 @@ module Holidays::Finder
               date = build_observed_date(date, regions, h)
             end
 
-            holidays << {:date => date, :name => h.name, :regions => h.regions}
+            holidays << {:date => date, :name => h.name, :type => h.type, :regions => h.regions}
           end
         end
       end
